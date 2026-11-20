@@ -9,11 +9,61 @@
 <section class="card"><h2>Exportações e backup</h2><p class="hint" id="saved">Dados salvos no navegador; exporte backup para OneDrive corporativo.</p><div class="actions"><button class="primary" id="txt">Roteiro preenchido (TXT)</button><button id="backup">Backup JSON (inclui fotos)</button><button id="zip">Fotos ZIP</button><button id="shareBatch" class="primary">Compartilhar todas as fotos (lote)</button><button id="light">Backup leve SEM fotos</button></div><label for="restore">Restaurar backup JSON</label><input type="file" id="restore" accept=".json,application/json"><p class="hint">Se os arquivos grandes não aparecerem no OneDrive, use Compartilhar todas as fotos (lote) ou Enviar foto individualmente e o backup leve, que NÃO contém fotos. As fotos são preservadas na resolução original. O armazenamento do navegador pode ser limpo pelo PDA, portanto confirme que o backup chegou ao OneDrive.</p></section>
 <section class="card"><details><summary>Referências técnicas</summary><pre id="refs"></pre></details><details><summary>Ferramentas e materiais</summary><pre id="materials"></pre></details><p class="hint">Revisão: 02/01/2026 · Responsável: Fabio de Souza Pereira/TIC/OI/MAC/OFFS · Equipe: Luciano de Souza Reis e Vagner Vale do Nascimento</p></section></main>
 <script>
+// IndexedDB can store substantially larger records than localStorage.
+// Never report an inspection as saved until the transaction commits.
+let storeDbPromise;
+function openPhotoStore(){
+ if(!('indexedDB' in window))return Promise.reject(Error('IndexedDB indisponível neste navegador'));
+ if(!storeDbPromise)storeDbPromise=new Promise((resolve,reject)=>{
+   const request=indexedDB.open('PreventivasTelecomP76Offline',1);
+   request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('records'))request.result.createObjectStore('records')};
+   request.onsuccess=()=>resolve(request.result);
+   request.onerror=()=>reject(request.error||Error('Falha ao abrir armazenamento'));
+   request.onblocked=()=>reject(Error('Banco bloqueado por outra aba'));
+ }).catch(error=>{storeDbPromise=null;throw error});
+ return storeDbPromise;
+}
+async function readPhotoStore(key){
+ const database=await openPhotoStore();
+ return new Promise((resolve,reject)=>{
+   const tx=database.transaction('records','readonly');
+   const request=tx.objectStore('records').get(key);
+   request.onsuccess=()=>resolve(request.result);
+   request.onerror=()=>reject(request.error||Error('Falha ao ler dados'));
+ });
+}
+async function writePhotoStore(key,record){
+ const database=await openPhotoStore();
+ return new Promise((resolve,reject)=>{
+   const tx=database.transaction('records','readwrite');
+   tx.oncomplete=()=>resolve();
+   tx.onerror=()=>reject(tx.error||Error('Falha no salvamento'));
+   tx.onabort=()=>reject(tx.error||Error('Armazenamento cheio ou operação interrompida'));
+   tx.objectStore('records').put(record,key);
+ });
+}
+let saveChain=Promise.resolve();
+function durableSave(key,record,indicator,successClass){
+ const snapshot=structuredClone(record);
+ indicator.textContent='Salvando dados e fotografias no PDA…';
+ saveChain=saveChain.catch(()=>{}).then(()=>writePhotoStore(key,snapshot));
+ return saveChain.then(()=>{
+   indicator.textContent='Gravação concluída no PDA. Faça backup no OneDrive regularmente.';
+   indicator.className=successClass;
+   return true;
+ }).catch(err=>{
+   indicator.textContent='ATENÇÃO: NÃO SALVO no PDA ('+(err?.message||err)+'). Não feche a página; envie as fotos ao OneDrive.';
+   indicator.className='error';
+   return false;
+ });
+}
+
 const ITEMS=["VERIFICAR SE O EQUIPAMENTO É APROPRIADO PARA OS REQUISITOS DE GRAU DE PROTEÇÃO E ZONA DO LOCAL DE INSTALAÇÃO, CONFORME O MAPA DE CLASSIFICAÇÃO DE ÁREA DA UNIDADE.","VERIFICAR A INTEGRIDADE FÍSICA DO EQUIPAMENTO (INCLUINDO SUPORTE) EM RELAÇÃO A DANOS FÍSICOS PROVOCADOS POR IMPACTO, FATORES AMBIENTAIS E/OU AGENTE EXTERNO.","VERIFICAR SE NÃO HÁ ACÚMULO INDEVIDO OU INADEQUADO DE PARTÍCULAS OU OBJETOS EXTERNAMENTE AO EQUIPAMENTO.","VERIFICAR SE PRENSA-CABOS ESTÃO DEVIDAMENTE APERTADOS (OU SEJA, SEM INDÍCIOS DO PRENSA-CABO ESTAR FROUXO).","VERIFICAR SE NÃO HÁ INDÍCIO DE ALGUMA MODIFICAÇÃO NÃO AUTORIZADA (COMO FURAÇÕES ADICIONAIS QUE INVALIDEM A PROTEÇÃO IP OU USO DE COMPONENTES E ACESSÓRIOS INADEQUADOS) NO EQUIPAMENTO.","VERIFICAR SE NÃO HÁ DANOS APARENTES NOS CABOS VISÍVEIS DO EQUIPAMENTO.","VERIFICAR SE NO EQUIPAMENTO E EM SEUS CABOS EXISTE ETIQUETA DE IDENTIFICAÇÃO (TAG). O TAG DO CABO E EQUIPAMENTO DEVE SER DE MATERIAL ADEQUADO PARA A ÁREA (INDOOR OU OUTDOOR). NÃO É NECESSÁRIO VERIFICAR SE A IDENTIFICAÇÃO DOS TAGS ESTÁ CORRETA (CONFORME A DOCUMENTAÇÃO).","FOTOGRAFAR O EXTERIOR DO EQUIPAMENTO E TAMBÉM A PLAQUETA DE INFORMAÇÕES TÉCNICAS DO FABRICANTE (COMO GRAU DE PROTEÇÃO, FABRICANTE E MODELO), QUANDO EXISTENTE. ANEXAR AS FOTOS À ORDEM DE MANUTENÇÃO.","VERIFICAR SE A INSTALAÇÃO DOS EQUIPAMENTOS ESTÁ DE ACORDO COM A DOCUMENTAÇÃO NO SINDOTEC (DIAGRAMA UNIFILAR E ARRANJO). CASO HAJA DIVERGÊNCIA, CORRIGIR A INSTALAÇÃO FÍSICA OU CORRIGIR A DOCUMENTAÇÃO."],REFS="PE-1PBR-00208 - MANUAL DE SEGURANÇA (MS)\nPE-1PBR-00210 - MS - PERMISSÃO PARA TRABALHO\nPE-2E&P-00972 - PRESERVAÇÃO DE EQUIPAMENTOS E INSTALAÇÕES DE SUPERFÍCIE DO E&P\nPE-2E&P-00955 - INSPEÇÃO DE INSTALAÇÕES ELÉTRICAS EM ÁREAS CLASSIFICADAS NO E&P\nNR10 - SEGURANÇA EM INSTALAÇÕES E SERVIÇOS EM ELETRICIDADE\nNR37 - SEGURANÇA E SAÚDE EM PLATAFORMAS DE PETRÓLEO – ITEM 37.14.6 E 37.14.8\nABNT NBR IEC 61892-7 - INSTALAÇÕES ELÉTRICAS MARÍTIMAS – PARTE 7: ÁREAS CLASSIFICADAS\nABNT NBR IEC 60079-17 – ATMOSFERAS EXPLOSIVAS – PARTE 17: INSPEÇÃO E MANUTENÇÃO DE INSTALAÇÕES ELÉTRICAS\nMAPA DE CLASSIFICAÇÃO DE AREA DA UNIDADE\nPR-3000.00-5510-760-P17-022 - PRESERVAÇÃO DE EQUIPAMENTOS DE TELECOMUNICAÇÕES EM UNIDADES MARÍTIMAS, DISPONÍVEL NO SINDOTEC\nMANUAL DO EQUIPAMENTO\nFOLHA DE DADOS DO EQUIPAMENTO",MATERIALS="TRINCHA DE 2\"\nESCOVA COM CERDAS DE LATÃO\nCÂMERA OU PDA PARA FOTOGRAFAR O EQUIPAMENTO\nGRAXA LUBRIFICANTE PARA JUNTAS FLANGEADAS, ROSQUEADAS E PARAFUSOS\nPROTETIVO CEROSO COM VCI\nDIFUSOR VCI\nDESENGRAXANTE COM VCI\nINIBIDOR DE CORROSÃO VCI BASE AQUOSA\nPROTETIVO CEROSO COM VCI\nREMOVEDOR DE CORROSÃO EM GEL\nTRAPO\nFITA DE PETROLATO\nGRAXA DE SILICONE PARA O-RING\nVASELINA SÓLIDA",TAG='CDT-5510504',OM='2032659022',KEY='p76-telefonia-cdt-v1';
 const $=id=>document.getElementById(id),fields=['name','company','hours','date','location','outcome','deviation'];
 const newData=()=>({name:'',company:'',hours:'',date:'',location:'',outcome:'',deviation:'',nextPhoto:1,items:ITEMS.map(()=>({status:'',obs:'',photos:[]}))});
 let d=newData(),saveTimer;const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<' : '&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(d));$('saved').textContent='Dados salvos automaticamente no navegador.';$('saved').className='hint'}catch(e){$('saved').textContent='Falha ao salvar: armazenamento bloqueado ou cheio! Exporte backup imediatamente.';$('saved').className='hint error'}},250)}
+function save(){clearTimeout(saveTimer);$('saved').textContent='Alterações pendentes de gravação…';saveTimer=setTimeout(()=>persistNow(),300)}
+function persistNow(){clearTimeout(saveTimer);return durableSave(KEY,d,$('saved'),'hint')}
 function seq(){let max=0;d.items.forEach(i=>i.photos.forEach(p=>max=Math.max(max,Number(p.seq)||0)));const n=Math.max(max+1,d.nextPhoto||1);d.nextPhoto=n+1;return n}
 function photoName(p){let ext=((p.name.match(/\.([a-z0-9]+)$/i)||[])[1]||(p.type||'image/jpeg').split('/')[1]||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase();return TAG+'_'+p.seq+'.'+ext}
 function draw(){fields.forEach(k=>$(k).value=d[k]||'');const root=$('items');root.replaceChildren();ITEMS.forEach((description,i)=>{const item=d.items[i],div=document.createElement('div');div.className='item';const title=document.createElement('h3');title.textContent=String(i+1).padStart(2,'0')+' — '+description;div.append(title);
@@ -23,7 +73,7 @@ const pl=document.createElement('label');pl.textContent='Adicionar fotos (resolu
 const camera=document.createElement('input'),gallery=document.createElement('input');
 for(const el of [camera,gallery]){el.type='file';el.accept='image/*';el.style.position='absolute';el.style.width='1px';el.style.height='1px';el.style.opacity='0';el.style.pointerEvents='none';el.tabIndex=-1}
 camera.setAttribute('capture','environment');gallery.multiple=true;
-const onPhoto=async e=>{for(const f of Array.from(e.target.files||[])){try{const url=await toData(f);item.photos.push({name:f.name,type:f.type,data:url,seq:seq()})}catch(err){alert('Não foi possível ler a foto: '+err.message)}}save();draw()};
+const onPhoto=async e=>{for(const f of Array.from(e.target.files||[])){try{const url=await toData(f);item.photos.push({name:f.name,type:f.type,data:url,seq:seq()})}catch(err){alert('Não foi possível ler a foto: '+err.message)}}const stored=await persistNow();draw();if(!stored)alert('A foto está visível, mas NÃO foi salva no PDA! Envie ao OneDrive antes de sair.')};
 camera.onchange=onPhoto;gallery.onchange=onPhoto;
 const options=document.createElement('div');options.className='photo-actions';
 const take=document.createElement('button');take.type='button';take.textContent='📷 Tirar foto';take.onclick=()=>camera.click();
@@ -48,6 +98,6 @@ function crc32(b){let c=0xffffffff;for(const v of b){c^=v;for(let j=0;j<8;j++)c=
 function zip(files){let off=0;const chunks=[],central=[];function put(view,pos,num,size){for(let j=0;j<size;j++)view.setUint8(pos+j,(num>>>(8*j))&255)}for(const f of files){const name=bytes(f.name),payload=f.bytes,crc=crc32(payload),local=new Uint8Array(30+name.length),v=new DataView(local.buffer);put(v,0,0x04034b50,4);put(v,4,20,2);put(v,6,0x0800,2);put(v,14,crc,4);put(v,18,payload.length,4);put(v,22,payload.length,4);put(v,26,name.length,2);local.set(name,30);chunks.push(local,payload);const c=new Uint8Array(46+name.length),cv=new DataView(c.buffer);put(cv,0,0x02014b50,4);put(cv,4,20,2);put(cv,6,20,2);put(cv,8,0x0800,2);put(cv,16,crc,4);put(cv,20,payload.length,4);put(cv,24,payload.length,4);put(cv,28,name.length,2);put(cv,42,off,4);c.set(name,46);central.push(c);off+=local.length+payload.length}const end=new Uint8Array(22),ev=new DataView(end.buffer);put(ev,0,0x06054b50,4);put(ev,8,files.length,2);put(ev,10,files.length,2);put(ev,12,central.reduce((a,c)=>a+c.length,0),4);put(ev,16,off,4);return new Blob([...chunks,...central,end],{type:'application/zip'})}
 $('shareBatch').onclick=shareBatchPhotos;
 $('zip').onclick=()=>{const list=d.items.flatMap(i=>i.photos.map(p=>({name:photoName(p),bytes:dataBytes(p.data)})));if(!list.length){alert('Nenhuma foto para exportar.');return}const b=zip(list);$('saved').textContent='ZIP de '+(b.size/1048576).toFixed(1)+' MB solicitado. Se falhar, use Enviar foto.';download(b,TAG+'_fotos.zip')};
-$('restore').onchange=async e=>{try{const v=JSON.parse(await e.target.files[0].text()).record;if(!v?.items||v.items.length!==9)throw Error('Backup incompatível');if(!confirm('Substituir os dados atuais?'))return;d=v;draw();save()}catch(err){alert(err.message)}};
-$('refs').textContent=REFS;$('materials').textContent=MATERIALS;try{const raw=localStorage.getItem(KEY);if(raw){const v=JSON.parse(raw);if(v.items?.length===9)d=v}else d.date=new Date().toISOString().slice(0,10)}catch(e){$('saved').textContent='Não foi possível carregar o armazenamento anterior.'}draw();
+$('restore').onchange=async e=>{try{const v=JSON.parse(await e.target.files[0].text()).record;if(!v?.items||v.items.length!==9)throw Error('Backup incompatível');if(!confirm('Substituir os dados atuais?'))return;d=v;draw();const ok=await persistNow();alert(ok?'Backup restaurado e salvo.':'Backup carregado, mas NÃO foi salvo no PDA.') }catch(err){alert(err.message)}};
+$('refs').textContent=REFS;$('materials').textContent=MATERIALS;async function initOffline(){try{const stored=await readPhotoStore(KEY);if(stored?.items?.length===9){d=stored;$('saved').textContent='Registro recuperado do armazenamento persistente do PDA.'}else{const raw=localStorage.getItem(KEY);if(raw){const legacy=JSON.parse(raw);if(legacy.items?.length===9){d=legacy;await persistNow()}}else{d.date=new Date().toISOString().slice(0,10)}}}catch(e){$('saved').textContent='ATENÇÃO: armazenamento persistente indisponível: '+e.message+'. Dados podem ser perdidos ao atualizar.';$('saved').className='error';try{const raw=localStorage.getItem(KEY);if(raw){const legacy=JSON.parse(raw);if(legacy.items?.length===9)d=legacy}}catch(_){}}draw()}initOffline();
 </script></body></html>
