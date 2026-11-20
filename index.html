@@ -15,11 +15,61 @@
 <section class="card"><h2>Backup e exportação</h2><p id="saved" class="sub"></p><div class="actions"><button class="primary" id="txt">Exportar roteiro preenchido (TXT)</button><button id="backup">Backup completo (JSON + fotos)</button><button id="photos">Exportar fotos (ZIP)</button><button id="shareBatch" class="primary">Compartilhar fotos desta caixa (lote)</button><button id="light">Backup leve SEM fotos</button></div><label for="restore">Restaurar backup JSON</label><input type="file" id="restore" accept=".json,application/json"><p class="tip sub">Se ZIP e backup completo não aparecerem no OneDrive, use Compartilhar fotos desta caixa (lote), ou Enviar foto em cada imagem e faça também o backup leve. Backup leve não contém fotos. No PDA, escolha OneDrive corporativo como destino de exportação. Fotos são mantidas sem redimensionamento. O backup inclui as duas OMs. O navegador pode limpar os dados locais conforme a política do dispositivo; exporte backup regularmente.</p></section>
 <section class="card"><details><summary>Observações normativas do roteiro</summary><p><b>OBS.1:</b> <span id="o1"></span></p><p><b>OBS.2:</b> <span id="o2"></span></p></details><details><summary>Referências técnicas</summary><pre id="refs"></pre></details><details><summary>Ferramentas e materiais necessários</summary><pre id="materials"></pre></details><p class="sub">Revisão: 07/01/2026 · Responsável: Fabio de Souza Pereira/TIC/OI/MAC/OFFS · Equipe: Luciano de Souza Reis; Vagner Vale do Nascimento.</p></section>
 </main><script>
+// IndexedDB can store substantially larger records than localStorage.
+// Never report an inspection as saved until the transaction commits.
+let storeDbPromise;
+function openPhotoStore(){
+ if(!('indexedDB' in window))return Promise.reject(Error('IndexedDB indisponível neste navegador'));
+ if(!storeDbPromise)storeDbPromise=new Promise((resolve,reject)=>{
+   const request=indexedDB.open('PreventivasTelecomP76Offline',1);
+   request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('records'))request.result.createObjectStore('records')};
+   request.onsuccess=()=>resolve(request.result);
+   request.onerror=()=>reject(request.error||Error('Falha ao abrir armazenamento'));
+   request.onblocked=()=>reject(Error('Banco bloqueado por outra aba'));
+ }).catch(error=>{storeDbPromise=null;throw error});
+ return storeDbPromise;
+}
+async function readPhotoStore(key){
+ const database=await openPhotoStore();
+ return new Promise((resolve,reject)=>{
+   const tx=database.transaction('records','readonly');
+   const request=tx.objectStore('records').get(key);
+   request.onsuccess=()=>resolve(request.result);
+   request.onerror=()=>reject(request.error||Error('Falha ao ler dados'));
+ });
+}
+async function writePhotoStore(key,record){
+ const database=await openPhotoStore();
+ return new Promise((resolve,reject)=>{
+   const tx=database.transaction('records','readwrite');
+   tx.oncomplete=()=>resolve();
+   tx.onerror=()=>reject(tx.error||Error('Falha no salvamento'));
+   tx.onabort=()=>reject(tx.error||Error('Armazenamento cheio ou operação interrompida'));
+   tx.objectStore('records').put(record,key);
+ });
+}
+let saveChain=Promise.resolve();
+function durableSave(key,record,indicator,successClass){
+ const snapshot=structuredClone(record);
+ indicator.textContent='Salvando dados e fotografias no PDA…';
+ saveChain=saveChain.catch(()=>{}).then(()=>writePhotoStore(key,snapshot));
+ return saveChain.then(()=>{
+   indicator.textContent='Gravação concluída no PDA. Faça backup no OneDrive regularmente.';
+   indicator.className=successClass;
+   return true;
+ }).catch(err=>{
+   indicator.textContent='ATENÇÃO: NÃO SALVO no PDA ('+(err?.message||err)+'). Não feche a página; envie as fotos ao OneDrive.';
+   indicator.className='error';
+   return false;
+ });
+}
+
 const CONTENT={"items":["<INSPEÇÃO EX>: VERIFICAR SE O EQUIPAMENTO É APROPRIADO PARA OS REQUISITOS DE GRAU DE PROTEÇÃO E ZONA DO LOCAL ONDE ESTÁ INSTALADO, CONFORME O MAPA DE CLASSIFICAÇÃO DE ÁREA DA UNIDADE. OBSERVAR QUE EQUIPAMENTOS DO SISTEMA PA/GA INSTALADOS EM ÁREAS ABERTAS, MESMO SE LOCALIZADOS EM ÁREAS NÃO CLASSIFICADAS, DEVEM SER ADEQUADOS PELO MENOS PARA ZONA 2, CONFORME ABNT NBR IEC 61892-7.","<INSPEÇÃO EX>: VERIFICAR A INTEGRIDADE FÍSICA DO EQUIPAMENTO (INCLUINDO SUPORTE) EM RELAÇÃO A DANOS FÍSICOS PROVOCADOS POR IMPACTO, FATORES AMBIENTAIS E/OU AGENTE EXTERNO.","<INSPEÇÃO EX>: VERIFICAR SE NÃO HÁ ACÚMULO INDEVIDO OU INADEQUADO DE PARTÍCULAS OU OBJETOS EXTERNAMENTE AO EQUIPAMENTO. REALIZAR A LIMPEZA EXTERNA DO MESMO, SE NECESSÁRIO, CASO O EQUIPAMENTO ESTEJA INSTALADO ABAIXO DE 2m.","<INSPEÇÃO EX>: CHECAR SE PRENSA-CABOS, PARAFUSOS E BUJÕES SÃO DO TIPO ADEQUADO AO TIPO DE PROTEÇÃO DO EQUIPAMENTO (POR EXEMPLO, PRENSA-CABO METÁLICO EX”d” PARA EQUIPAMENTO METÁLICO EX”d”) E SE ESTÃO DEVIDAMENTE APERTADOS. SE O EQUIPAMENTO ESTIVER INSTALADO ACIMA DE 2m, DEVERÁ SER REALIZADA SOMENTE INSPEÇÃO VISUAL (VER OBS.2).","<INSPEÇÃO EX>: VERIFICAR SE NÃO HÁ INDÍCIO DE ALGUMA MODIFICAÇÃO NÃO AUTORIZADA (COMO FURAÇÕES ADICIONAIS OU USO DE COMPONENTES E ACESSÓRIOS INADEQUADOS) NO EQUIPAMENTO.","<INSPEÇÃO EX>: VERIFICAR SE O ATERRAMENTO DO EQUIPAMENTO ESTÁ ADEQUADO E DEVIDAMENTE APERTADO. EM EQUIPAMENTO INSTALADO ACIMA DE 2m, DEVERÁ SER REALIZADA SOMENTE INSPEÇÃO VISUAL (VER OBS.2).","<INSPEÇÃO EX>: VERIFICAR SE NÃO HÁ DANOS APARENTES NOS CABOS VISÍVEIS DO EQUIPAMENTO.","<INSPEÇÃO EX>: VERIFICAR SE NO EQUIPAMENTO E EM SEUS CABOS EXISTE ETIQUETA DE IDENTIFICAÇÃO (TAG). O TAG DO CABO E EQUIPAMENTO DEVE SER DE MATERIAL ADEQUADO PARA A ÁREA (INDOOR OU OUTDOOR). NÃO É NECESSÁRIO VERIFICAR SE A IDENTIFICAÇÃO DOS TAGS ESTÁ CORRETA (CONFORME A DOCUMENTAÇÃO).","REALIZAR A PRESERVAÇÃO DE TODOS OS ELEMENTOS APLICÁVEIS E INSTALADOS ABAIXO DE 2m, CONFORME PROCEDIMENTO PR-3000.00-5510-760-P17-022 - PRESERVAÇÃO DE EQUIPAMENTOS DE TELECOMUNICAÇÕES EM UNIDADES MARÍTIMAS, DISPONÍVEL NO SINDOTEC.","FOTOGRAFAR O EXTERIOR DO EQUIPAMENTO. FOTOGRAFAR TAMBÉM A PLAQUETA EX DO EQUIPAMENTO. ANEXAR AS FOTOS À ORDEM DE MANUTENÇÃO.","VERIFICAR SE A INSTALAÇÃO DOS EQUIPAMENTOS ESTÁ DE ACORDO COM A DOCUMENTAÇÃO NO SINDOTEC (DIAGRAMA UNIFILAR E ARRANJO). CASO HAJA DIVERGÊNCIA, CORRIGIR A INSTALAÇÃO FÍSICA OU CORRIGIR A DOCUMENTAÇÃO."],"refs":"PE-1PBR-00208 - MANUAL DE SEGURANÇA (MS)\nPE-1PBR-00210 - MS - PERMISSÃO PARA TRABALHO\nPE-2E&P-00972 - PRESERVAÇÃO DE EQUIPAMENTOS E INSTALAÇÕES DE SUPERFÍCIE DO E&P\nPE-2E&P-00955 - INSPEÇÃO DE INSTALAÇÕES ELÉTRICAS EM ÁREAS CLASSIFICADAS NO E&P\nNR10 - SEGURANÇA EM INSTALAÇÕES E SERVIÇOS EM ELETRICIDADE\nNR37 - SEGURANÇA E SAÚDE EM PLATAFORMAS DE PETRÓLEO – ITEM 37.26.6\nSOLAS - SAFETY OF LIFE AT SEA - CAPÍTULO III PARTE B, SEÇÃO I, REGRA 6\nLSA CODE – INTERNATIONAL LIFE-SAVING APPLIANCE CODE\nRES. A.1021(26) - CODE ON ALARMS AND INDICATORS, 2009\nMSC/CIRC.808 - RECOMENDATION ON PERFORMANCE STANDARDS FOR PUBLIC ADDRESS SYSTEMS\nMSC.1/CIRC.1432 - REVISED GUIDELINES FOR THE MAINTENANCE AND INSPECTION OF FIRE PROTECTION SYSTEMS AND APPLIANCES\nNORSOK T-101 – TELECOM SYSTEM\nISO 7240-19 - FIRE DETECTION AND ALARM SYSTEMS - PART 19 DESIGN, INSTALLATION, COMMISSIONING AND SERVICE OF SOUND SYSTEMS FOR EMERGENCY\nNORMAM01 - NORMA DA AUTORIDADE MARÍTIMA PARA EMBARCAÇÕES EMPREGADAS NA NAVEGAÇÃO EM MAR ABERTO - ITEM 0416 B\nABNT NBR IEC 61892-7 - INSTALAÇÕES ELÉTRICAS MARÍTIMAS – PARTE 7: ÁREAS CLASSIFICADAS\nABNT NBR IEC 60079-17 – ATMOSFERAS EXPLOSIVAS – PARTE 17: INSPEÇÃO E MANUTENÇÃO DE INSTALAÇÕES ELÉTRICAS\nMAPA DE CLASSIFICAÇÃO DE AREA DA UNIDADE\nPR-3000.00-5510-760-P17-022 - PRESERVAÇÃO DE EQUIPAMENTOS DE TELECOMUNICAÇÕES EM UNIDADES MARÍTIMAS, DISPONÍVEL NO SINDOTEC\nRL-3000.00-5510-760-P17-006 - ANALISE DE VARIACAO DE MEDIDAS DE IMPEDANCIA EM SONOFLETORES, DISPONÍVEL NO SINDOTEC\nMANUAL DO EQUIPAMENTO\nFOLHA DE DADOS DO EQUIPAMENTO","materials":"TRINCHA DE 2\"\nESCOVA COM CERDAS DE LATÃO\nCHAVE DE FENDA\nCHAVE PHILIPS\nCHAVE INGLESA\nCÂMERA OU PDA PARA FOTOGRAFAR O EQUIPAMENTO\nGRAXA LUBRIFICANTE OU VASELINA SÓLIDA PARA JUNTAS FLANGEADAS, JUNTAS ROSQUEADAS E PARAFUSOS\nPROTETIVO CEROSO COM VCI\nDIFUSOR VCI\nDESENGRAXANTE COM VCI\nINIBIDOR DE CORROSÃO VCI BASE AQUOSA\nPROTETIVO CEROSO COM VCI\nREMOVEDOR DE CORROSÃO EM GEL\nTRAPO\nFITA DE PETROLATO\nGRAXA DE SILICONE PARA O-RING","obs1":"ESSE ROTEIRO CONTÉM OS ITENS APLICÁVEIS DE INSPEÇÃO EX ESTABELECIDA PELA ABNT-NBR-IEC-60079-17.","obs2":"CONFORME A IEC-60079-17, INSPEÇÃO VISUAL É O TIPO DE INSPEÇÃO QUE IDENTIFICA, SEM A UTILIZAÇÃO DE EQUIPAMENTOS DE ACESSO OU FERRAMENTAS, DEFEITOS QUE SÃO EVIDENTES VISUALMENTE, COMO, POR EXEMPLO, AUSÊNCIA DE PARAFUSOS, PRENSA-CABO MUITO FROUXOS, EQUIPAMENTOS ABERTOS, QUEBRADOS OU SEM ATERRAMENTO, FALTA DE UNIDADES SELADORAS OU MODIFICAÇÕES NÃO AUTORIZADAS. INSPEÇÃO VISUAL IMPLICA EM UMA VERIFICAÇÃO MAIS SIMPLES, BUSCANDO APENAS INDÍCIOS APARENTES DE NÃO-CONFORMIDADES."};
 const TAGS=[{tag:'CDI-5510505A',om:'2032214967',time:'08:05'},{tag:'CDI-5510505B',om:'2032214968',time:'08:07'}],KEY='telecom-p76-paga-cdi-v2';
 const $=id=>document.getElementById(id),empty=()=>({name:'',company:'',hours:'',date:'',location:'',outcome:'',deviation:'',items:CONTENT.items.map(()=>({status:'',obs:'',photos:[]}))});
 let db={A:empty(),B:empty()},current='A',timer;const info=()=>TAGS[current==='A'?0:1],rec=()=>db[current];const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){clearTimeout(timer);timer=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(db));$('saved').textContent='Dados salvos automaticamente no navegador.';$('saved').className='sub success'}catch(e){$('saved').textContent='AVISO: armazenamento cheio ou bloqueado. Exporte o backup JSON agora.';$('saved').className='sub error'}},200)}
+function save(){clearTimeout(timer);$('saved').textContent='Alterações pendentes de gravação…';timer=setTimeout(()=>persistNow(),300)}
+function persistNow(){clearTimeout(timer);return durableSave(KEY,db,$('saved'),'sub success')}
 function draw(){const t=info(),r=rec();$('tabA').className=current==='A'?'sel':'';$('tabB').className=current==='B'?'sel':'';$('title').textContent=t.tag;$('meta').textContent='OM '+t.om+' · Operação 10 · A3280-1A.IMO_INSPEC.CX DISTRIB.EX PA/GA';
 for(const k of ['name','company','hours','date','location','outcome','deviation'])$(k).value=r[k]||'';
 const root=$('checks');root.replaceChildren();CONTENT.items.forEach((desc,i)=>{const item=r.items[i],div=document.createElement('div');div.className='check';const h=document.createElement('h3');h.textContent=String(i+1).padStart(2,'0')+' — '+desc;div.append(h);
@@ -29,7 +79,7 @@ const photoLabel=document.createElement('label');photoLabel.textContent='Fotos /
 const camera=document.createElement('input'),gallery=document.createElement('input');
 for(const el of [camera,gallery]){el.type='file';el.accept='image/*';el.style.position='absolute';el.style.width='1px';el.style.height='1px';el.style.opacity='0';el.style.pointerEvents='none';el.tabIndex=-1}
 camera.setAttribute('capture','environment');gallery.multiple=true;
-const onPhoto=async e=>{try{for(const file of Array.from(e.target.files||[])){if(file.size>25*1024*1024&&!confirm('Foto com mais de 25 MB. Salvar mesmo assim?'))continue;const data=await asDataUrl(file);item.photos.push({name:file.name,mime:file.type||'image/jpeg',data,sequence:nextSequence(r)})}save();draw()}catch(err){alert('Não foi possível incluir fotos: '+err.message);save()}};
+const onPhoto=async e=>{try{for(const file of Array.from(e.target.files||[])){if(file.size>25*1024*1024&&!confirm('Foto com mais de 25 MB. Salvar mesmo assim?'))continue;const data=await asDataUrl(file);item.photos.push({name:file.name,mime:file.type||'image/jpeg',data,sequence:nextSequence(r)})}const stored=await persistNow();draw();if(!stored)alert('A foto está na tela, mas NÃO foi gravada no PDA! Envie ao OneDrive antes de sair.')}catch(err){alert('Não foi possível incluir fotos: '+err.message);await persistNow()}};
 camera.onchange=onPhoto;gallery.onchange=onPhoto;
 const options=document.createElement('div');options.className='photo-actions';
 const take=document.createElement('button');take.type='button';take.textContent='📷 Tirar foto';take.onclick=()=>camera.click();
@@ -58,7 +108,7 @@ $('txt').onclick=report;$('shareBatch').onclick=shareBatchPhotos;
 $('backup').onclick=()=>{try{const b=new Blob([JSON.stringify({version:2,created:new Date().toISOString(),db})],{type:'application/json'});$('saved').textContent='Backup completo de '+(b.size/1048576).toFixed(1)+' MB solicitado. Confira no OneDrive.';blobDownload(b,'P76_PAGA_CDI_backup.json')}catch(e){$('saved').textContent='Falha na preparação: '+e.message}};
 $('light').onclick=()=>{const copy=JSON.parse(JSON.stringify(db));for(const k of ['A','B'])copy[k].items.forEach(it=>it.photos=[]);blobDownload(new Blob([JSON.stringify({version:2,created:new Date().toISOString(),db:copy})],{type:'application/json'}),'P76_PAGA_CDI_backup_SEM_FOTOS.json');$('saved').textContent='Backup SEM FOTOS solicitado. Envie as fotos individualmente.'};
 $('photos').onclick=()=>{const files=[];for(const t of ['A','B']){const tag=TAGS[t==='A'?0:1].tag;db[t].items.forEach((x,i)=>x.photos.forEach((p,j)=>files.push({name:photoName(tag,i,j,p),bytes:dataBytes(p.data)})))}if(!files.length){alert('Nenhuma foto foi registrada.');return}const b=zip(files);$('saved').textContent='ZIP de '+(b.size/1048576).toFixed(1)+' MB solicitado. Se não aparecer no OneDrive, use Enviar foto.';blobDownload(b,'P76_PAGA_CDI_fotos.zip')};
-$('restore').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const d=JSON.parse(await file.text()),v=d.db;if(!v?.A?.items||!v?.B?.items||v.A.items.length!==11||v.B.items.length!==11)throw Error('Backup incompatível');if(!confirm('Restaurar as duas OMs e substituir os dados atuais?'))return;db=v;migratePhotos();save();draw();alert('Backup restaurado.')}catch(err){alert('Falha ao restaurar: '+err.message)}};
+$('restore').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const d=JSON.parse(await file.text()),v=d.db;if(!v?.A?.items||!v?.B?.items||v.A.items.length!==11||v.B.items.length!==11)throw Error('Backup incompatível');if(!confirm('Restaurar as duas OMs e substituir os dados atuais?'))return;db=v;migratePhotos();draw();const ok=await persistNow();alert(ok?'Backup restaurado e gravado no PDA.':'Backup carregado, mas NÃO foi salvo no PDA. Não feche a página.')}catch(err){alert('Falha ao restaurar: '+err.message)}};
 $('o1').textContent=CONTENT.obs1;$('o2').textContent=CONTENT.obs2;$('refs').textContent=CONTENT.refs;$('materials').textContent=CONTENT.materials;
-try{const stored=localStorage.getItem(KEY);if(stored){const d=JSON.parse(stored);if(d.A?.items?.length===11&&d.B?.items?.length===11)db=d}}catch(e){$('saved').textContent='Não foi possível carregar o registro anterior.'}migratePhotos();draw();
+async function initOffline(){try{const stored=await readPhotoStore(KEY);if(stored?.A?.items?.length===11&&stored?.B?.items?.length===11){db=stored;$('saved').textContent='Dados recuperados do armazenamento persistente do PDA.'}else{const legacy=localStorage.getItem(KEY);if(legacy){const d=JSON.parse(legacy);if(d.A?.items?.length===11&&d.B?.items?.length===11){db=d;migratePhotos();await persistNow()}}else{$('saved').textContent='Nenhum registro anterior encontrado.'}}}catch(e){$('saved').textContent='ATENÇÃO: armazenamento persistente indisponível: '+e.message+'. As alterações podem se perder ao atualizar.';$('saved').className='error';try{const legacy=localStorage.getItem(KEY);if(legacy){const old=JSON.parse(legacy);if(old.A?.items?.length===11&&old.B?.items?.length===11)db=old}}catch(_){}}migratePhotos();draw()}initOffline();
 </script></body></html>
