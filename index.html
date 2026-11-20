@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a2340"><title>Preventivas Telecom | Inspeções</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#182a3d;background:#f3f6fa}
+*{box-sizing:border-box}body{margin:0}header{background:#0a2340;color:#fff;padding:22px 16px}main{max-width:850px;margin:auto;padding:18px 14px 80px}
+h1{font-size:1.35rem;margin:0 0 4px}h2{font-size:1.05rem;margin:0}p{line-height:1.5}.sub{opacity:.8;font-size:.9rem}
+.panel{background:#fff;border:1px solid #dce4ed;border-radius:14px;padding:16px;margin:0 0 15px;box-shadow:0 2px 7px #112a4210}
+label{display:block;font-size:.88rem;font-weight:650;margin:12px 0 5px}
+input,select,textarea,button{font:inherit}input:not([type=file]),select,textarea{width:100%;border:1px solid #b8c7d6;border-radius:9px;padding:11px;background:white;color:#152b40}
+textarea{min-height:72px;resize:vertical}button{border:0;border-radius:9px;background:#09559d;color:white;font-weight:650;padding:12px 13px;cursor:pointer}
+button.secondary{color:#09559d;background:#e9f1f9}button.warn{color:#a52c19;background:#fff0ec}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.actions button{flex:1 1 160px}
+.check{border-top:1px solid #e1e8ee;padding:15px 0}.check:first-child{border:0}.check h3{font-size:.98rem;margin:0}
+.status{display:flex;gap:7px;margin:10px 0}.status label{margin:0;flex:1;display:block}.status input{position:absolute;opacity:0}
+.status span{display:block;text-align:center;border:1px solid #b7c8d7;background:#f3f6fa;border-radius:9px;padding:9px}
+.status input:checked+span{background:#09559d;color:#fff;border-color:#09559d}
+.note{color:#596c7d;font-size:.85rem}.ok{color:#247043}.alert{color:#a52c19}
+.photo{font-size:.85rem;margin:6px 0}.photo button{padding:5px 9px;font-size:.8rem}
+footer{text-align:center;color:#556776;font-size:.8rem;padding:12px}
+</style></head><body>
+<header><div style="max-width:850px;margin:auto"><h1>Preventivas Telecom</h1><div class="sub">Checklist genérico de inspeção · utilização condicionada às normas da organização</div></div></header>
+<main>
+<section class="panel"><h2>Registro de inspeção</h2>
+<p class="note">Esta é uma versão genérica. Não publique informações internas, registros, fotografias ou documentos corporativos neste repositório público. Os dados inseridos aqui permanecem neste navegador e só são exportados quando você solicitar.</p>
+<label for="tag">Identificação do equipamento (preencher localmente)</label><input id="tag" autocomplete="off" placeholder="Identificador autorizado">
+<label for="ordem">Referência da ordem (preencher localmente)</label><input id="ordem" autocomplete="off" placeholder="Referência">
+<label for="tipo">Tipo de inspeção</label><input id="tipo" placeholder="Ex.: inspeção visual de telecom">
+<label for="local">Localização</label><input id="local" placeholder="Preencha se autorizado">
+<label for="exec">Executante</label><input id="exec">
+<label for="empresa">Empresa</label><input id="empresa">
+<label for="hh">HH por executante</label><input id="hh" inputmode="decimal">
+<label for="data">Data</label><input type="date" id="data">
+<label for="situacao">Situação da operação</label><select id="situacao"><option value="">Selecione</option><option>CONCLUÍDA</option><option>NÃO CONCLUÍDA</option><option>NÃO EXECUTADA</option></select>
+<label for="desvio">Causa do desvio (quando aplicável)</label><input id="desvio">
+</section>
+<section class="panel"><h2>Itens de verificação</h2><p class="note">Adicione as descrições de inspeção autorizadas. ES = sem anormalidade; EC = com anormalidade; NE = não executado. Observação obrigatória para EC e NE.</p><div id="items"></div>
+<button type="button" class="secondary" id="add">+ Adicionar item</button></section>
+<section class="panel"><h2>Exportação e recuperação</h2><div id="state" class="note">Carregando armazenamento...</div><div class="actions">
+<button id="txt">Exportar relatório TXT</button><button id="backup" class="secondary">Exportar backup JSON (com fotos)</button><button id="photos" class="secondary">Exportar fotos individualmente</button></div>
+<label for="restore">Restaurar backup JSON</label><input type="file" id="restore" accept=".json,application/json">
+<p class="note">No PDA, use a opção permitida para salvar ou enviar os arquivos ao OneDrive corporativo. As fotos são armazenadas localmente na resolução recebida. Confirme que os arquivos chegaram ao OneDrive antes de limpar dados do navegador. O armazenamento pode ser limitado ou apagado pela política do dispositivo.</p></section>
+</main><footer>Portal técnico genérico · Sem transmissão automática de dados</footer>
+<script>
+const KEY='preventivas-generic-v1',fields=['tag','ordem','tipo','local','exec','empresa','hh','data','situacao','desvio'];let records=[],saveTimer;
+const $=id=>document.getElementById(id);
+const blank=()=>({title:'',status:'',obs:'',photos:[]});
+const htmlEscape=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function persist(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{const payload={fields:Object.fromEntries(fields.map(k=>[k,$(k).value])),records};localStorage.setItem(KEY,JSON.stringify(payload));$('state').textContent='Alterações salvas neste navegador.';$('state').className='note ok'}catch(e){$('state').textContent='Armazenamento indisponível ou cheio! Exporte o backup imediatamente.';$('state').className='note alert'}},250)}
+function render(){const root=$('items');root.replaceChildren();records.forEach((r,i)=>{const div=document.createElement('div');div.className='check';
+div.innerHTML='<h3>Item '+String(i+1).padStart(2,'0')+'</h3><label>Descrição / critério de inspeção</label><textarea class="desc" placeholder="Insira o texto autorizado">'+htmlEscape(r.title)+'</textarea><div class="status">'+['ES','EC','NE'].map(s=>'<label><input type="radio" name="s'+i+'" value="'+s+'" '+(r.status===s?'checked':'')+'><span>'+s+'</span></label>').join('')+'</div><label>Observações</label><textarea class="obs" placeholder="Obrigatório em EC ou NE">'+htmlEscape(r.obs)+'</textarea><label>Fotografias / evidências</label><input class="upload" type="file" accept="image/*" multiple><div class="gallery"></div><button class="warn remove" type="button">Remover item</button>';
+div.querySelector('.desc').oninput=e=>{r.title=e.target.value;persist()};div.querySelector('.obs').oninput=e=>{r.obs=e.target.value;persist()};
+div.querySelectorAll('input[type=radio]').forEach(el=>el.onchange=()=>{r.status=el.value;persist()});
+div.querySelector('.remove').onclick=()=>{if(confirm('Remover este item e suas fotos?')){records.splice(i,1);render();persist()}};
+div.querySelector('.upload').onchange=async e=>{for(const f of e.target.files){const data=await fileToData(f);r.photos.push({name:f.name,type:f.type,data})}render();persist()};
+const gallery=div.querySelector('.gallery');r.photos.forEach((p,j)=>{const row=document.createElement('div');row.className='photo';const name=document.createElement('span');name.textContent=p.name+' ';const b=document.createElement('button');b.className='warn';b.textContent='Excluir';b.onclick=()=>{r.photos.splice(j,1);render();persist()};row.append(name,b);gallery.append(row)});root.append(div)})}
+function fileToData(f){return new Promise((res,rej)=>{const fr=new FileReader;fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(f)})}
+function download(name,content,type){const a=document.createElement('a');const u=URL.createObjectURL(new Blob([content],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),15000)}
+function safe(s){return String(s||'SEM_IDENTIFICACAO').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,80)}
+function validate(){const err=[];records.forEach((r,i)=>{if(!r.title.trim()||!r.status)err.push('Item '+(i+1)+' incompleto');if(r.status&&r.status!=='ES'&&!r.obs.trim())err.push('Item '+(i+1)+' sem observação')});if(!$('situacao').value)err.push('Situação da operação não informada');return err}
+$('add').onclick=()=>{records.push(blank());render();persist()};
+fields.forEach(id=>$(id).addEventListener('input',persist));
+$('txt').onclick=()=>{const errors=validate();if(errors.length&&!confirm(errors.join('\n')+'\n\nExportar mesmo assim?'))return;const f=Object.fromEntries(fields.map(k=>[k,$(k).value]));let lines=['REGISTRO DE INSPEÇÃO - TELECOM','IDENTIFICAÇÃO: '+f.tag,'REFERÊNCIA: '+f.ordem,'TIPO: '+f.tipo,'LOCALIZAÇÃO: '+f.local,'EXECUTANTE: '+f.exec,'EMPRESA: '+f.empresa,'HH POR EXECUTANTE: '+f.hh,'DATA: '+f.data,'','STATUS: ES = EXECUTADO SEM ANORMALIDADE; EC = EXECUTADO COM ANORMALIDADE; NE = NÃO EXECUTADO',''];records.forEach((r,i)=>{lines.push(String(i+1).padStart(2,'0')+' ('+(r.status||'  ')+') '+r.title,'OBS: '+r.obs,'FOTOS: '+r.photos.map((p,j)=>safe(f.tag)+'_'+(i+1)+'_'+(j+1)).join(', '),'')});lines.push('SITUAÇÃO DA OPERAÇÃO: '+f.situacao,'CAUSA DO DESVIO: '+f.desvio);download(safe(f.tag)+'_relatorio.txt',lines.join('\r\n'),'text/plain;charset=utf-8')};
+$('backup').onclick=()=>{download(safe($('tag').value)+'_backup.json',JSON.stringify({version:1,exported:new Date().toISOString(),fields:Object.fromEntries(fields.map(k=>[k,$(k).value])),records},null,2),'application/json')};
+$('photos').onclick=()=>{const ps=records.flatMap((r,i)=>r.photos.map((p,j)=>({p,i,j})));if(!ps.length){alert('Não há fotos.');return}if(!confirm('Exportar '+ps.length+' foto(s) separadamente? O navegador pode bloquear downloads múltiplos.'))return;for(const {p,i,j} of ps){const a=document.createElement('a');a.href=p.data;a.download=safe($('tag').value)+'_'+(i+1)+'_'+(j+1)+'.'+(p.name.split('.').pop()||'jpg');a.click()}};
+$('restore').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.records)||!d.fields)throw Error('Arquivo inválido');if(!confirm('Substituir o registro atual pelo backup?'))return;fields.forEach(k=>$(k).value=d.fields[k]||'');records=d.records.map(r=>({title:String(r.title||''),status:String(r.status||''),obs:String(r.obs||''),photos:Array.isArray(r.photos)?r.photos:[]}));render();persist();alert('Backup restaurado')}catch(err){alert('Falha ao restaurar: '+err.message)}};
+try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);fields.forEach(k=>$(k).value=d.fields?.[k]||'');records=Array.isArray(d.records)?d.records:[]}else{$('data').value=new Date().toISOString().slice(0,10);records=[blank()]};$('state').textContent='Armazenamento local disponível (sujeito às políticas do PDA).'}catch(e){records=[blank()];$('state').textContent='Não foi possível recuperar dados locais.'}render();
+</script></body></html>
