@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123b56"><title>Preventiva | P-76</title>
+<link rel="stylesheet" href="estilo.css"></head>
+<body>
+<div class="barra"><div class="wrap">
+  <a class="voltar" href="./" aria-label="Voltar ao início">←</a>
+  <div class="id"><b id="tagTopo">Carregando…</b><small id="progTopo"></small></div>
+  <button class="salvar" id="salvarSair" type="button">💾 Salvar e sair</button>
+</div><div class="progresso"><div id="barraProg" style="width:0"></div></div></div>
+
+<main class="wrap">
+<p id="erroGeral" class="msg erro"></p>
+<div id="app" hidden>
+
+<section class="card">
+  <h2 id="titulo"></h2>
+  <div class="sub" id="meta"></div>
+  <div class="grade">
+    <div><label for="name">Executante</label><input id="name" autocomplete="name" placeholder="Nome completo"></div>
+    <div><label for="company">Empresa</label><input id="company" placeholder="Empresa"></div>
+    <div><label for="hours">HH por executante</label><input id="hours" inputmode="decimal" placeholder="HH"></div>
+    <div><label for="date">Data da inspeção</label><input id="date" type="date"></div>
+    <div><label for="location">Localização (opcional)</label><input id="location" placeholder="Localização da caixa"></div>
+  </div>
+  <div id="obsRoteiro"></div>
+</section>
+
+<section class="card">
+  <h2 id="tituloItens">Roteiro SAP</h2>
+  <p class="sub">ES = executado sem anormalidade · EC = executado com anormalidade · NE = não executado. Em EC ou NE a OBS é obrigatória.</p>
+  <div id="itens"></div>
+</section>
+
+<section class="card">
+  <h2>Encerramento da operação</h2>
+  <div class="grade">
+    <div><label for="outcome">01 — Situação da operação</label><select id="outcome"><option value="">Selecione</option><option>CONCLUÍDA</option><option>NÃO CONCLUÍDA</option><option>NÃO EXECUTADA</option></select></div>
+    <div><label for="deviation">02 — Causa do desvio nº (Tabela 1)</label><input id="deviation" placeholder="Quando aplicável"></div>
+  </div>
+  <div id="pendencias"></div>
+</section>
+
+<section class="card">
+  <h2>Exportar e fazer backup</h2>
+  <p id="msgSalvo" class="msg"></p>
+  <div class="acoes">
+    <button class="btn prim" id="txt" type="button">📄 Exportar roteiro preenchido (TXT)</button>
+    <button class="btn prim" id="compartilhar" type="button">📤 Enviar todas as fotos</button>
+    <button class="btn" id="zipFotos" type="button">🗜️ Fotos em ZIP</button>
+    <button class="btn" id="backup" type="button">💾 Backup desta OM (com fotos)</button>
+    <button class="btn" id="backupLeve" type="button">Backup leve (sem fotos)</button>
+    <label class="btn" for="restaurar" style="margin:0">↩️ Restaurar backup</label>
+  </div>
+  <input type="file" id="restaurar" class="oculto" accept=".json,application/json">
+  <details><summary>Como garantir que nada se perca</summary>
+    <p class="sub">Os dados ficam gravados no navegador do PDA, que pode ser limpo pelo sistema. Ao terminar, envie o TXT e as fotos ao OneDrive corporativo e confira se chegaram. As fotos originais ficam guardadas separadamente no PDA; o backup JSON leva cópias otimizadas (até 1600 px), não os originais. Se o envio em lote ou o ZIP não chegar ao OneDrive, use “Enviar” em cada foto e faça também o backup leve.</p>
+  </details>
+</section>
+
+<section class="card">
+  <details><summary>Referências técnicas</summary><pre id="refs"></pre></details>
+  <details><summary>Ferramentas e materiais necessários</summary><pre id="materiais"></pre></details>
+  <p class="sub" id="revisao"></p>
+</section>
+</div>
+</main>
+
+<script src="dados.js"></script>
+<script src="nucleo.js"></script>
+<script>
+'use strict';
+const N=window.Nucleo,$=id=>document.getElementById(id);
+const CAMPOS=['name','company','hours','date','location','outcome','deviation'];
+let O,R,reg,timer,cadeia=Promise.resolve();
+
+/* ---------- Gravação ---------- */
+function msg(t,classe){const m=$('msgSalvo');m.textContent=t;m.className='msg'+(classe?' '+classe:'')}
+function agendar(){clearTimeout(timer);msg('Alterações pendentes de gravação…');atualizarProgresso();timer=setTimeout(gravarAgora,300)}
+function gravarAgora(){
+  clearTimeout(timer);
+  cadeia=cadeia.catch(()=>{}).then(()=>N.salvar(reg));
+  return cadeia.then(()=>{msg('Gravado no PDA às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'. Faça backup no OneDrive ao terminar.','ok');return true})
+    .catch(e=>{msg('ATENÇÃO: NÃO SALVO no PDA ('+(e?.message||e)+'). Não feche a página; envie as fotos ao OneDrive.','erro');return false});
+}
+$('salvarSair').onclick=async()=>{
+  const b=$('salvarSair');if(!reg){location.assign('./');return}
+  b.disabled=true;b.textContent='Gravando…';
+  const ok=await gravarAgora();
+  if(ok)location.assign('./');
+  else{alert('Não foi possível confirmar a gravação. Os dados continuam na tela: não feche a aba e exporte um backup.');b.disabled=false;b.textContent='💾 Salvar e sair'}
+};
+addEventListener('pagehide',()=>{if(reg)gravarAgora()});
+
+/* ---------- Progresso ---------- */
+function atualizarProgresso(){
+  const p=N.progresso(reg);
+  $('progTopo').textContent='OM '+O.om+' · '+p.feitos+'/'+p.total+' itens'+(p.pend?' · '+p.pend+' sem OBS':'');
+  $('barraProg').style.width=(100*p.feitos/p.total)+'%';
+  reg.items.forEach((it,i)=>{const el=document.getElementById('item'+i);if(!el)return;
+    el.className='item'+(it.status==='ES'?' ok':it.status==='EC'?' alerta':it.status==='NE'?' ne':'');
+    const ta=el.querySelector('textarea'),falta=(it.status==='EC'||it.status==='NE')&&!it.obs.trim();
+    ta.classList.toggle('falta',falta);el.querySelector('.aviso-obs').hidden=!falta});
+  const lista=verificar();
+  $('pendencias').innerHTML='';
+  if(lista.length){const p=document.createElement('p');p.className='aviso';p.textContent='Pendências: '+lista.slice(0,6).join(' · ')+(lista.length>6?' · +'+(lista.length-6):'');$('pendencias').append(p)}
+}
+function verificar(){
+  const e=[];
+  reg.items.forEach((x,i)=>{if(!x.status)e.push('item '+(i+1)+' sem status');else if(x.status!=='ES'&&!x.obs.trim())e.push('item '+(i+1)+' sem OBS')});
+  for(const [k,nome] of [['power','potência'],['isolation','isolação']])reg[k].forEach((m,i)=>{if(!m.status||(m.status!=='NE'&&!m.measured))e.push(nome+' linha '+(i+1)+' incompleta')});
+  if(!reg.outcome)e.push('situação da operação não selecionada');
+  return e;
+}
+
+/* ---------- Itens ---------- */
+function el(tag,props={},...filhos){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...filhos);return e}
+function desenharItens(){
+  const raiz=$('itens');raiz.replaceChildren();
+  R.itens.forEach((texto,i)=>{
+    const it=reg.items[i],box=el('div',{id:'item'+i,class:'item'});
+    box.append(el('div',{class:'item-cab'},el('span',{class:'num'},String(i+1).padStart(2,'0')),el('p',{class:'texto'},texto)));
+    const st=el('div',{class:'status',role:'radiogroup'});
+    for(const [s,d] of [['ES','sem anormalidade'],['EC','com anormalidade'],['NE','não executado']]){
+      const inp=el('input',{type:'radio',name:'st'+i,value:s,checked:it.status===s});
+      inp.onchange=()=>{it.status=s;agendar()};
+      st.append(el('label',{},inp,el('span',{},s,el('small',{},d))));
+    }
+    box.append(st);
+    const tipo=R.medicoes?.[i];
+    if(tipo)box.append(tabelaMedicao(tipo));
+    const ta=el('textarea',{value:it.obs,placeholder:'Observação (obrigatória para EC ou NE)'});
+    ta.setAttribute('aria-label','OBS do item '+(i+1));
+    ta.oninput=()=>{it.obs=ta.value;agendar()};
+    box.append(el('label',{},'OBS:'),ta,el('p',{class:'aviso-obs',hidden:true},'Informe a observação.'));
+    box.append(blocoFotos(it));
+    raiz.append(box);
+  });
+  atualizarProgresso();
+}
+
+/* ---------- Fotos ---------- */
+function blocoFotos(it){
+  const area=el('div');
+  const cam=el('input',{type:'file',accept:'image/*',class:'oculto',tabIndex:-1});cam.setAttribute('capture','environment');
+  const gal=el('input',{type:'file',accept:'image/*',multiple:true,class:'oculto',tabIndex:-1});
+  const aoEscolher=async e=>{await incluirFotos(it,e.target.files);e.target.value='';redesenharFotos()};
+  cam.onchange=aoEscolher;gal.onchange=aoEscolher;
+  const b1=el('button',{type:'button',class:'btn'},'📷 Tirar foto');b1.onclick=()=>cam.click();
+  const b2=el('button',{type:'button',class:'btn'},'🖼️ Galeria');b2.onclick=()=>gal.click();
+  const grade=el('div',{class:'fotos'});
+  function redesenharFotos(){
+    grade.replaceChildren();
+    it.photos.forEach(p=>{
+      const nome=N.nomeFoto(O.tag,p);
+      const enviar=el('button',{type:'button'},'Enviar');enviar.onclick=()=>enviarUma(p);
+      const excluir=el('button',{type:'button'},'Excluir');
+      excluir.onclick=async()=>{if(!confirm('Excluir a foto '+nome+'?'))return;it.photos=it.photos.filter(x=>x!==p);const ok=await gravarAgora();if(ok)N.apagarOriginal(p.orig);redesenharFotos();atualizarProgresso()};
+      grade.append(el('div',{class:'foto'},el('img',{src:p.preview,alt:nome,loading:'lazy'}),el('div',{class:'nome'},nome),el('div',{class:'bts'},enviar,excluir)));
+    });
+  }
+  redesenharFotos();
+  area.append(el('label',{},'Fotos / evidências'),el('div',{class:'fotos-bt'},b1,b2),cam,gal,grade);
+  return area;
+}
+function lerArquivo(f){return new Promise((ok,falha)=>{const r=new FileReader;r.onload=()=>ok(r.result);r.onerror=()=>falha(r.error);r.readAsDataURL(f)})}
+async function reduzir(url){const img=new Image;await new Promise((ok,falha)=>{img.onload=ok;img.onerror=falha;img.src=url});const f=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*f));c.height=Math.max(1,Math.round(img.height*f));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.76)}
+async function incluirFotos(it,arquivos){
+  for(const f of Array.from(arquivos||[])){
+    try{
+      if(f.size>25*1024*1024&&!confirm('Foto com mais de 25 MB. Incluir mesmo assim?'))continue;
+      const seq=reg.nextPhoto++,preview=await reduzir(await lerArquivo(f));
+      let orig=null;try{orig=await N.guardarOriginal(O.tag+'_'+seq,f)}catch(e){alert('O PDA guardou só a cópia otimizada desta foto. Envie o original ao OneDrive.')}
+      it.photos.push({seq,name:f.name||'foto.jpg',mime:f.type||'image/jpeg',preview,orig});
+    }catch(e){alert('Não foi possível incluir a foto: '+e.message)}
+  }
+  const ok=await gravarAgora();atualizarProgresso();
+  if(!ok)alert('A foto aparece na tela, mas NÃO foi gravada no PDA. Envie ao OneDrive antes de sair.');
+}
+function todasFotos(){const l=[];reg.items.forEach(it=>it.photos.forEach(p=>l.push(p)));return l}
+async function enviarUma(p){
+  const nome=N.nomeFoto(O.tag,p);
+  try{const b=await N.blobDaFoto(p),f=new File([b],nome,{type:b.type});
+    if(navigator.canShare?.({files:[f]})){await navigator.share({files:[f],title:nome});msg('Envio solicitado: '+nome+'. Confira no OneDrive.')}
+    else{N.baixar(b,nome);msg('Download solicitado: '+nome+'.')}
+  }catch(e){msg(e.name==='AbortError'?'Envio cancelado.':'Falha ao enviar '+nome+': '+e.message,e.name==='AbortError'?'':'erro')}
+}
+$('compartilhar').onclick=async()=>{
+  const lista=todasFotos();if(!lista.length){alert('Nenhuma foto registrada nesta OM.');return}
+  try{
+    if(!navigator.canShare){msg('Este navegador não envia vários arquivos de uma vez. Use “Enviar” em cada foto ou o ZIP.','erro');return}
+    const files=[];for(const p of lista){const b=await N.blobDaFoto(p);files.push(new File([b],N.nomeFoto(O.tag,p),{type:b.type}))}
+    if(!navigator.canShare({files})){msg('O PDA não aceitou o lote de '+files.length+' fotos. Use “Enviar” em cada foto.','erro');return}
+    await navigator.share({files,title:'Fotos '+O.tag});msg('Envio de '+files.length+' foto(s) solicitado. Confira no OneDrive.');
+  }catch(e){msg(e.name==='AbortError'?'Envio cancelado.':'Falha no envio em lote: '+e.message,e.name==='AbortError'?'':'erro')}
+};
+$('zipFotos').onclick=async()=>{
+  const lista=todasFotos();if(!lista.length){alert('Nenhuma foto registrada nesta OM.');return}
+  const arqs=[];for(const p of lista)arqs.push({name:N.nomeFoto(O.tag,p),bytes:new Uint8Array(await (await N.blobDaFoto(p)).arrayBuffer())});
+  const z=N.zip(arqs);N.baixar(z,O.om+'_'+O.tag+'_fotos.zip');msg('ZIP de '+(z.size/1048576).toFixed(1)+' MB solicitado. Se não chegar ao OneDrive, use “Enviar” em cada foto.');
+};
+
+/* ---------- Medições (potência / isolação) ---------- */
+function num(x){const v=String(x||'').trim().replace(',','.');return v&&Number.isFinite(Number(v))?Number(v):null}
+function statusPotencia(medido,projeto){const x=num(medido),p=num(projeto);return x===null||p===null||p<=0?'':(x>=p*.8-1e-8&&x<=p*1.2+1e-8?'ES':'EC')}
+function statusIsolacao(medido,un){const x=num(medido);return x===null?'':(x*({'kΩ':.001,'MΩ':1,'GΩ':1000}[un])>=1?'ES':'EC')}
+function tabelaMedicao(tipo){
+  const pot=tipo==='potencia',h=O.historico,hist=pot?h.potencia:h.isolacao,dados=reg[pot?'power':'isolation'];
+  const box=el('div',{class:'medicao'});
+  box.append(el('p',{class:'sub'},pot?'Status calculado automaticamente: ES se a medida estiver dentro de ±20% do projeto. Pode ser alterado manualmente.':'Status calculado automaticamente: ES se ≥ 1 MΩ. Pode ser alterado manualmente.'));
+  if(h.avisos?.[tipo])box.append(el('p',{class:'aviso'},h.avisos[tipo]));
+  const t=el('table'),cab=el('tr');
+  for(const c of pot?['Cabo','Proj. W','Ant. W','Atual W','Status']:['Cabo','Anterior','Atual','Un.','Status'])cab.append(el('th',{},c));
+  const corpo=el('tbody');
+  hist.forEach((hx,i)=>{
+    const d=dados[i],tr=el('tr');
+    tr.append(el('td',{},hx.cabo));if(pot)tr.append(el('td',{},hx.projeto));tr.append(el('td',{},hx.anterior));
+    const inp=el('input',{inputMode:'decimal',placeholder:'Medir',value:d.measured});inp.setAttribute('aria-label','Medida atual '+hx.cabo);
+    tr.append(el('td',{},inp));
+    let un;if(!pot){un=el('select');for(const u of ['kΩ','MΩ','GΩ'])un.append(el('option',{value:u},u));un.value=d.unit;tr.append(el('td',{},un))}
+    const st=el('select');for(const s of ['','ES','EC','NE'])st.append(el('option',{value:s},s||'—'));st.value=d.status;tr.append(el('td',{},st));
+    const calc=()=>{d.status=pot?statusPotencia(d.measured,hx.projeto):statusIsolacao(d.measured,d.unit);st.value=d.status;agendar()};
+    inp.oninput=()=>{d.measured=inp.value;calc()};if(un)un.onchange=()=>{d.unit=un.value;calc()};st.onchange=()=>{d.status=st.value;agendar()};
+    corpo.append(tr);
+  });
+  t.append(el('thead',{},cab),corpo);box.append(el('div',{class:'tabela'},t));
+  const chave=pot?'instrumentPower':'instrumentIso',instr=el('input',{value:reg[chave],placeholder:'Modelo e nº de série'});
+  instr.oninput=()=>{reg[chave]=instr.value;agendar()};
+  box.append(el('label',{},'Instrumento utilizado (modelo e nº de série)'),instr);
+  const notas=pot?h.notasPotencia:h.notasIsolacao;
+  box.append(el('details',{},el('summary',{},'Inspeção anterior: instrumento, notas e status'),
+    el('pre',{},(pot?h.instrPotencia:h.instrIsolacao)+(notas?'\n'+notas:'')+'\nStatus anterior: '+hist.map(x=>x.status).join(', '))));
+  return box;
+}
+function linhasMedicao(tipo){
+  const pot=tipo==='potencia',h=O.historico,hist=pot?h.potencia:h.isolacao,dados=reg[pot?'power':'isolation'];
+  const out=[pot?'CABO / PROJETO (W) / MEDIDA (W) / STATUS /':'CABO / MEDIDO (OHM) / STATUS /','--------------------------------------------------------'];
+  dados.forEach((d,i)=>{const leitura=d.measured?(pot?d.measured:d.measured+' '+d.unit):'';out.push(hist[i].cabo+' / '+(pot?hist[i].projeto+' / ':'')+leitura+' / '+(d.status||'')+' /')});
+  out.push('INSTRUMENTO UTILIZADO: '+reg[pot?'instrumentPower':'instrumentIso']);
+  return out;
+}
+
+/* ---------- TXT no formato do roteiro SAP ---------- */
+$('txt').onclick=()=>{
+  const e=verificar();if(e.length&&!confirm('Pendências:\n• '+e.slice(0,12).join('\n• ')+(e.length>12?'\n…':'')+'\n\nExportar mesmo assim?'))return;
+  const L=[];
+  // Para A3281, o texto destinado ao SAP começa diretamente no código do roteiro:
+  // cabeçalho de OM, data e hora são anotações do OneNote, não do roteiro exportado.
+  if(O.roteiro!=='A3281-1A'){
+    const data=reg.date?new Date(reg.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'DATA NÃO INFORMADA';
+    if(O.textoOperacao)L.push(O.om+'        '+R.operacao+'        '+O.textoOperacao,'');
+    L.push(data,'');if(O.hora)L.push(O.hora,'');
+  }
+  L.push(R.codigo,'','EXECUTANTE (S)','','NOME                                   ! EMPRESA  ! HH POR/EXEC',reg.name+' ! '+reg.company+' ! '+reg.hours,'',R.titulo,'',
+    'PARA STATUS DIFERENTES DE "ES" FAVOR ADICIONAR OBSERVAÇÕES.','','IDENTIFICAR CADA ITEM QUANTO A SUA EXECUÇÃO:','',
+    '( ES ) EXECUTADO SEM ANORMALIDADE','( EC ) EXECUTADO COM ANORMALIDADE','( NE ) NÃO EXECUTADO','');
+  R.obs.forEach((o,i)=>L.push('OBS.'+(i+1)+': '+o,''));
+  reg.items.forEach((x,i)=>{
+    L.push(String(i+1).padStart(2,'0')+' ( '+(x.status||'  ')+' ) '+R.itens[i]);
+    if(R.medicoes?.[i])L.push('',...linhasMedicao(R.medicoes[i]));
+    L.push('','OBS: '+x.obs);
+    if(x.photos.length)L.push('FOTOS: '+x.photos.map(p=>N.nomeFoto(O.tag,p)).join(', '));
+    L.push('');
+  });
+  const S='--------------------------------------------------------------',X=s=>'( '+(reg.outcome===s?'X':' ')+' ) '+s;
+  L.push(S,'','REFERÊNCIAS TÉCNICAS:','',R.refs,'',S,'','FERRAMENTAS E MATERIAIS NECESSÁRIOS:','',R.materiais,'',S,'','Revisão: '+R.revisao,'','Responsável:','-'+R.responsavel,'','Equipe:',...R.equipe.map(x=>'-'+x),'',
+    '................................................................','','01-SITUAÇÃO DA OPERAÇÃO:','',X('CONCLUÍDA')+' '+X('NÃO CONCLUÍDA')+' '+X('NÃO EXECUTADA'),'','02-CAUSA DO DESVIO No. ( '+(reg.deviation||'     ')+' ) - Usar Tabela 1');
+  N.baixar(new Blob([L.join('\r\n')],{type:'text/plain;charset=utf-8'}),O.om+'_'+O.tag+'_preenchida.txt');
+  msg('TXT gerado. Confira no OneDrive.');
+};
+
+/* ---------- Backup ---------- */
+$('backup').onclick=()=>{const b=N.montarBackup([reg],false);N.baixar(b,O.om+'_'+O.tag+'_backup.json');msg('Backup de '+(b.size/1048576).toFixed(1)+' MB solicitado. Confira no OneDrive.')};
+$('backupLeve').onclick=()=>{N.baixar(N.montarBackup([reg],true),O.om+'_'+O.tag+'_backup_SEM_FOTOS.json');msg('Backup sem fotos solicitado. Envie as fotos separadamente.')};
+$('restaurar').onchange=async e=>{
+  const f=e.target.files?.[0];e.target.value='';if(!f)return;
+  try{
+    const regs=N.lerBackup(JSON.parse(await f.text())),r=regs[O.tag];
+    if(!r)throw Error('este arquivo não contém a '+O.tag+'.');
+    if(!confirm('Substituir os dados atuais da '+O.tag+' pelos do backup?'))return;
+    reg=r;preencher();const ok=await gravarAgora();
+    alert(ok?'Backup restaurado e gravado no PDA.':'Backup carregado, mas NÃO gravado no PDA. Não feche a página.');
+  }catch(err){alert('Não foi possível restaurar: '+err.message)}
+};
+
+/* ---------- Início ---------- */
+function preencher(){for(const k of CAMPOS)$(k).value=reg[k]||'';desenharItens()}
+CAMPOS.forEach(k=>$(k).addEventListener('input',()=>{reg[k]=$(k).value;agendar()}));
+async function iniciar(){
+  N.registrarSW();
+  try{
+    const q=new URLSearchParams(location.search),tag=q.get('tag');
+    O=N.om(tag);if(!O)throw Error(tag?'TAG “'+tag+'” não está no catálogo.':'Nenhuma TAG informada.');
+    R=N.roteiro(O);
+    document.title=O.tag+' | Preventiva P-76';
+    $('tagTopo').textContent=O.tag;
+    $('titulo').textContent=O.tag+' — OM '+O.om;
+    $('meta').textContent=P76.sistemas[O.sistema]+' · Operação '+R.operacao+' · '+R.codigo;
+    $('tituloItens').textContent='Roteiro SAP — '+R.itens.length+' itens';
+    R.obs.forEach((o,i)=>$('obsRoteiro').append(el('details',{},el('summary',{},'OBS.'+(i+1)+' do roteiro'),el('p',{class:'sub'},o))));
+    $('refs').textContent=R.refs;$('materiais').textContent=R.materiais;
+    $('revisao').textContent='Revisão: '+R.revisao+' · Responsável: '+R.responsavel+' · Equipe: '+R.equipe.join('; ');
+    const {registro,origem}=await N.carregar(O.tag);reg=registro;
+    $('app').hidden=false;preencher();
+    msg(origem==='migrado'?'Registro trazido da versão anterior do app e gravado no novo formato.':origem==='pda'?'Registro recuperado do PDA.':'Nova inspeção. Os dados são gravados automaticamente.',origem==='migrado'?'ok':'');
+    N.pedirPersistencia();
+  }catch(e){
+    $('erroGeral').innerHTML='';$('erroGeral').append('Não foi possível abrir a preventiva: '+e.message+' ',el('a',{href:'./'},'Voltar ao início'));
+    $('tagTopo').textContent='Erro';
+  }
+}
+iniciar();
+</script>
+</body></html>
+
