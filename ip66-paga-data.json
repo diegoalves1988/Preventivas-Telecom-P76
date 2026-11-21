@@ -1,0 +1,348 @@
+{
+  "items": [
+    "VERIFICAR SE AS CONDIÇÕES DE LIBERAÇÃO DO EQUIPAMENTO FORAM REALMENTE ATENDIDAS, CONFORME SOLICITADO EM PT (PERMISSÃO DE TRABALHO).",
+    "REALIZAR, NA CENTRAL DO PA/GA, O DESLIGAMENTO DE TODOS OS CIRCUITOS (CHAMADA E ALARME, ECC E LSE) QUE PASSAM PELO EQUIPAMENTO.",
+    "REALIZAR A ABERTURA DO EQUIPAMENTO.",
+    "VERIFICAR A INTEGRIDADE FÍSICA DO EQUIPAMENTO (INTERNA E EXTERNAMENTE), INCLUINDO ANÉIS DE VEDAÇÃO (O-RING), EM RELAÇÃO A DANOS FÍSICOS PROVOCADOS POR IMPACTO, FATORES AMBIENTAIS E/OU AGENTE EXTERNO.",
+    "VERIFICAR A INTEGRIDADE E APERTO DE PRENSA-CABOS, BORRACHAS DE VEDAÇÃO, PARAFUSOS, PORCAS E BUJÕES.",
+    "VERIFICAR A INTEGRIDADE FÍSICA DE BLOCOS E TERMINAIS NO INTERIOR DO EQUIPAMENTO.",
+    "CONFERIR O APERTO DE TODAS AS CONEXÕES NO INTERIOR DO EQUIPAMENTO. CASO HAJA ALGUM BORNE FROUXO, DEVERÁ SER REAPERTADO.",
+    "VERIFICAR SE TODOS OS CABOS/FIOS NÃO UTILIZADOS ESTÃO DEVIDAMENTE ORGANIZADOS, FIXADOS, TERMINADOS OU ISOLADOS NO INTERIOR DO EQUIPAMENTO.",
+    "VERIFICAR SE O EQUIPAMENTO, SEUS CABOS (INTERNOS E EXTERNOS) E SEUS TERMINAIS INTERNOS ESTÃO TODOS IDENTIFICADOS COM TAG DE MATERIAL ADEQUADO E CONFORME A DOCUMENTAÇÃO DO SISTEMA.",
+    "VERIFICAR SE NÃO HÁ ACÚMULO INDEVIDO DE POEIRA, UMIDADE OU SUJEIRA NO EQUIPAMENTO (INTERNA E EXTERNAMENTE). REALIZAR A LIMPEZA INTERNA E EXTERNA DO MESMO.",
+    "VERIFICAR SE NÃO HÁ DANOS APARENTES NOS CABOS (INTERNOS E EXTERNOS) DO EQUIPAMENTO.",
+    "REALIZAR AS MEDIÇÕES DE POTÊNCIA DA(S) LINHA(S) INTERNA(S) DE SONOFLETORES DO EQUIPAMENTO. OS VALORES DE POTÊNCIA MEDIDOS DEVEM SER IGUAIS AOS VALORES DE ATUAIS DE PROJETO/DOCUMENTAÇÃO, COM MARGEM DE +/- 20%. ANOTAR OS VALORES ATUAIS DE PROJETO NA COLUNA “PROJETO (W)”, OS VALORES MEDIDOS NA COLUNA “MEDIDA (W)” E O RESULTADO ENCONTRADO (ES, EC, NE) NA COLUNA “STATUS”. APÓS CADA DESCONEXÃO DE CABOS/FIOS PARA REALIZAÇÃO DAS MEDIDAS, AFIXÁ-LOS ADEQUADAMENTE NOS DEVIDOS TERMINAIS. PARA LINHAS COM SONOFLETORES DE 0,5W, ADOTAR UM VALOR ESPERADO DE 0,93W PARA CADA SONOFLETOR, CONFORME RL-3000.00-5510-760-P17-006, DISPONÍVEL NO SINDOTEC. INFORMAR O INSTRUMENTO UTILIZADO.",
+    "REALIZAR A MEDIDA DA ISOLAÇÃO PARA A TERRA EM TODAS AS LINHAS DE SONOFLETORES DO EQUIPAMENTO. O VALOR MEDIDO DEVERÁ SER IGUAL OU MAIOR A 1M OHM. ANOTAR OS VALORES MEDIDOS NO CAMPO “MEDIDO (OHM)” E O RESULTADO ENCONTRADO (ES, EC, NE) NA COLUNA “STATUS”. APÓS CADA DESCONEXÃO DE CABOS/FIOS PARA REALIZAÇÃO DAS MEDIDAS, AFIXÁ-LOS ADEQUADAMENTE NOS DEVIDOS TERMINAIS. INFORMAR O INSTRUMENTO UTILIZADO.",
+    "FOTOGRAFAR O INTERIOR DO EQUIPAMENTO, DE FORMA QUE SE POSSA IDENTIFICAR OS COMPONENTES E LIGAÇÕES INTERNAS, E ANEXAR À ORDEM DE MANUTENÇÃO.",
+    "REALIZAR O FECHAMENTO DO EQUIPAMENTO.",
+    "REALIZAR, NA CENTRAL DO PA/GA, O RELIGAMENTO DE TODOS OS CIRCUITOS (CIRCUITOS DE CHAMADA E ALARME, ECC OU LÂMPADAS DE SINALIZAÇÃO DE EMERGÊNCIA) QUE PASSAM PELO EQUIPAMENTO, DE FORMA A DEIXÁ-LO ENERGIZADO E OPERACIONAL.",
+    "VERIFICAR SE A INSTALAÇÃO DO EQUIPAMENTO (COMO LOCALIZAÇÃO, CABOS E BORNES INTERNOS, TIPO DE CAIXA, DENTRE OUTROS) ESTÁ DE ACORDO COM A DOCUMENTAÇÃO NO SINDOTEC (DIAGRAMA UNIFILAR, DIAGRAMA DE CONEXÕES E ARRANJO). CASO HAJA DIVERGÊNCIA, CORRIGIR A INSTALAÇÃO FÍSICA OU CORRIGIR A DOCUMENTAÇÃO.",
+    "FOTOGRAFAR O EXTERIOR DO EQUIPAMENTO FECHADO. FOTOGRAFAR TAMBÉM A PLAQUETA DE INFORMAÇÕES TÉCNICAS EXTERNAS (COMO GRAU DE PROTEÇÃO, FABRICANTE E MODELO), QUANDO EXISTENTE. ANEXAR AS FOTOS À ORDEM DE MANUTENÇÃO."
+  ],
+  "refs": "PE-1PBR-00208 - MANUAL DE SEGURANÇA (MS)\nPE-1PBR-00210 - MS - PERMISSÃO PARA TRABALHO\nPE-2E&P-00972 - PRESERVAÇÃO DE EQUIPAMENTOS E INSTALAÇÕES DE SUPERFÍCIE DO E&P\nNR10 - SEGURANÇA EM INSTALAÇÕES E SERVIÇOS EM ELETRICIDADE\nNR37 - SEGURANÇA E SAÚDE EM PLATAFORMAS DE PETRÓLEO – ITEM 37.26.6\nSOLAS - SAFETY OF LIFE AT SEA - CAPÍTULO III PARTE B, SEÇÃO I, REGRA 6\nLSA CODE – INTERNATIONAL LIFE-SAVING APPLIANCE CODE\nRES. A.1021(26) - CODE ON ALARMS AND INDICATORS, 2009\nMSC/CIRC.808 - RECOMENDATION ON PERFORMANCE STANDARDS FOR PUBLIC ADDRESS SYSTEMS\nNORSOK T-101 – TELECOM SYSTEM\nISO 7240-19 - FIRE DETECTION AND ALARM SYSTEMS - PART 19 DESIGN, INSTALLATION, COMMISSIONING AND SERVICE OF SOUND SYSTEMS FOR EMERGENCY\nNORMAM01 - NORMA DA AUTORIDADE MARÍTIMA PARA EMBARCAÇÕES EMPREGADAS NA NAVEGAÇÃO EM MAR ABERTO - ITEM 0416 B\nRL-3000.00-5510-760-P17-006 - ANALISE DE VARIACAO DE MEDIDAS DE IMPEDANCIA EM SONOFLETORES, DISPONÍVEL NO SINDOTEC\nMANUAL DO EQUIPAMENTO\nFOLHA DE DADOS DO EQUIPAMENTO",
+  "materials": "MULTIMETRO\nIMPEDANCÍMETRO\nMEGÔMETRO\nCHAVE DE FENDA\nCHAVE PHILIPS\nTRAPO/PANO/PINCEL PARA LIMPEZA\nCÂMERA OU PDA PARA FOTOGRAFAR O EQUIPAMENTO\nNÃO SE APLICA",
+  "assets": {
+    "CDI-5510502A": {
+      "om": "2032245980",
+      "power": [
+        [
+          "Cal-CDI-02.10A",
+          "5",
+          "6",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.01A",
+          "10",
+          "11,5",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.02A",
+          "6",
+          "7",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.03A",
+          "8",
+          "7,5",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.04A",
+          "7,5",
+          "8",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.05A",
+          "1,5",
+          "1,3",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.06A",
+          "8",
+          "9",
+          "ES"
+        ],
+        [
+          "Cca-CDI-02.07A",
+          "4",
+          "4",
+          "ES"
+        ],
+        [
+          "Cal-CDI-02.02A",
+          "6",
+          "7",
+          "ES"
+        ],
+        [
+          "Cal-CDI-02.03A",
+          "3,5",
+          "4",
+          "ES"
+        ]
+      ],
+      "isolation": [
+        " >110M",
+        "100K",
+        ">110M",
+        ">110M",
+        "40M",
+        "5M",
+        "48M",
+        "60K",
+        ">110M",
+        ">110M"
+      ],
+      "isolStatuses": [
+        "ES",
+        "EC",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "EC",
+        "ES",
+        "ES"
+      ],
+      "powerInstrument": "MINRATOR MR-PRO, N/S:07300118-00",
+      "isoInstrument": "FLUKE 1587, N/S: 33090083",
+      "oldNotes12": "",
+      "oldNotes13": "ABERTA NOTA 16400039 PARA VERIFICAÇÃO DAS LINHAS Cca-CDI-02.01A E Cca-CDI-02.07A."
+    },
+    "CDI-5510502B": {
+      "om": "2032245982",
+      "power": [
+        [
+          "Cca-CFI-02.01B",
+          "14,8",
+          "15,5",
+          "ES"
+        ],
+        [
+          "Cca-CFI-02.02B",
+          "23,43",
+          "26,32",
+          "ES"
+        ],
+        [
+          "Cca-CFI-02.03B",
+          "5,5",
+          "5,26",
+          "ES"
+        ],
+        [
+          "Cca-CFI-02.04B",
+          "9,22",
+          "6,66",
+          "EC"
+        ],
+        [
+          "Cca-CFI-02.05B",
+          "9,29",
+          "9,09",
+          "ES"
+        ],
+        [
+          "Cal-CFI-02.01B",
+          "9,3",
+          "5,8",
+          "EC"
+        ],
+        [
+          "Cal-CFI-02.02B",
+          "2,79",
+          "2,24",
+          "ES"
+        ],
+        [
+          "Cal-CFI-02.03B",
+          "3,72",
+          "2,22",
+          "EC"
+        ],
+        [
+          "Cal-CFI-02.04B",
+          "9,3",
+          "6,66",
+          "EC"
+        ],
+        [
+          "Cal-CFI-02.05B",
+          "6,5",
+          "2273",
+          "EC"
+        ],
+        [
+          "Cal-CFI-02.06B",
+          "6,5",
+          "7,14",
+          "ES"
+        ],
+        [
+          "Cal-CFI-02.07B",
+          "?",
+          "10,42",
+          "EC"
+        ]
+      ],
+      "isolation": [
+        "80 M",
+        "65 M",
+        "22 K",
+        "50 K",
+        "5,6M",
+        "160 M",
+        "1G",
+        "230 M",
+        "320 M",
+        "150 M",
+        "24 M",
+        "7,4 M"
+      ],
+      "isolStatuses": [
+        "ES",
+        "ES",
+        "EC",
+        "EC",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES"
+      ],
+      "isoCableOverride": [
+        "Cca-CDI-02.01B",
+        "Cca-CDI-02.02B",
+        "Cca-CDI-02.03B",
+        "Cca-CDI-02.04B",
+        "Cca-CDI-02.05B",
+        "Cal-CDI-02.01B",
+        "Cal-CDI-02.02B",
+        "Cal-CDI-02.03B",
+        "Cal-CDI-02.04B",
+        "Cal-CDI-02.05B",
+        "Cal-CDI-02.06B",
+        "Cal-CDI-02.07B"
+      ],
+      "powerInstrument": "NTI MINI RATOR MR-PRO SN:G2P-RAIEY-G0",
+      "isoInstrument": "MINIPA 2701A NS3860639",
+      "oldNotes12": "ABERTO NOTA 16568096 PARA TRATAMENTO DA POTENCIA DIVERGENTE. NOTA 16568273 ABERTA PARA CORREÇÃO DA DOCUMENTAÇÃO DIVERGENCIA NA Cal-CFI-02.07B.",
+      "oldNotes13": "SERVIÇO SERÁ ATENDIDO PELA ORDEM:2027670866, PARA VERIFICAÇÃO DA BAIXA ISOLAÇÃO."
+    },
+    "CDI-5510503A": {
+      "om": "2032245984",
+      "power": [
+        [
+          "CcA-CDI-03.01A",
+          "8,5",
+          "9,5",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.02A",
+          "18,5",
+          "18,0",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.03A",
+          "9,0",
+          "8,0",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.04A",
+          "58,5",
+          "61,5",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.05A",
+          "25",
+          "25",
+          "ES"
+        ]
+      ],
+      "isolation": [
+        "60 Ω",
+        "60 Ω",
+        "60 Ω",
+        "50 Ω",
+        "30 Ω"
+      ],
+      "isolStatuses": [
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES"
+      ],
+      "powerInstrument": "IMPEDANCÍMETRO GOLD LINE ZM1P N/A.:025546",
+      "isoInstrument": "MEGÔMETRO MINIPA MI-2552 N/A.:024669",
+      "oldNotes12": "",
+      "oldNotes13": ""
+    },
+    "CDI-5510503B": {
+      "om": "2032245985",
+      "power": [
+        [
+          "CcA-CDI-03.01B",
+          "9,5",
+          "9,5",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.02B",
+          "18,5",
+          "19,5",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.03B",
+          "9,0",
+          "9,0",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.04B",
+          "58,5",
+          "60,0",
+          "ES"
+        ],
+        [
+          "CcA-CDI-03.05B",
+          "25,0",
+          "24,0",
+          "ES"
+        ]
+      ],
+      "isolation": [
+        ">70 Ω",
+        ">70 Ω",
+        ">70 Ω",
+        ">60 Ω",
+        ">40 Ω"
+      ],
+      "isolStatuses": [
+        "ES",
+        "ES",
+        "ES",
+        "ES",
+        "ES"
+      ],
+      "powerInstrument": "IMPEDANCÍMETRO GOLD LINE ZM1P N/A.:025546",
+      "isoInstrument": "MEGÔMETRO MINIPA MI-2552 N/A.:024669",
+      "oldNotes12": "",
+      "oldNotes13": ""
+    }
+  }
+}
