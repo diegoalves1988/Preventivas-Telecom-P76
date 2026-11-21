@@ -1,38 +1,142 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#123b56"><title>Preventivas Telecom | P-76</title>
+<link rel="stylesheet" href="estilo.css">
 <style>
-:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f2f6fa;color:#19344a}
-*{box-sizing:border-box}body{margin:0}header{background:#123b56;color:#fff;padding:22px 16px}header .wrap,main,footer{max-width:940px;margin:auto}
-h1{font-size:1.5rem;margin:0 0 6px}header p{margin:0;color:#d5e4ed;font-size:.9rem}
-main{padding:18px 14px 60px}.intro{background:#e9f1f8;border:1px solid #d3e0eb;padding:14px;border-radius:12px;color:#35536b;font-size:.9rem;line-height:1.55}
-h2{font-size:1.14rem;margin:24px 0 10px}.count{font-size:.82rem;color:#5d7486;font-weight:500}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:13px}
-.card{display:flex;flex-direction:column;gap:10px;text-decoration:none;background:#fff;border:1px solid #d7e2eb;border-radius:14px;padding:17px;color:inherit;box-shadow:0 2px 7px #142d4010;min-height:185px}
-.card:focus,.card:hover{border-color:#207db4;outline:2px solid #b8dcec;outline-offset:1px}
-.tag{font-size:1.15rem;font-weight:750;overflow-wrap:anywhere}
-.om{font-size:.88rem;color:#4f6b80}.desc{font-size:.88rem;line-height:1.45;color:#415d70;flex:1}
-.action{display:block;text-align:center;background:#145b8d;color:white;font-weight:650;padding:11px 14px;border-radius:9px}
-.note{margin-top:19px;font-size:.83rem;line-height:1.6;color:#536c7d}footer{padding:0 14px 30px;font-size:.78rem;color:#718495}
-@media(max-width:350px){.grid{grid-template-columns:1fr}}
+.busca{position:sticky;top:0;z-index:5;background:var(--fundo);padding:10px 0 6px}
+.busca input{font-size:1rem;padding:12px 12px 12px 38px!important;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%235f7487' stroke-width='2.2'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E") no-repeat 12px center}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid #c3d3df;background:#fff;color:#2b4a60;border-radius:99px;padding:7px 12px;font-size:.84rem;font-weight:600;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--azul2);border-color:var(--azul2);color:#fff}
+.chip .n{opacity:.7;margin-left:4px}
+.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.resumo button{background:#fff;border:1px solid var(--borda);border-radius:11px;padding:10px 6px;text-align:center;cursor:pointer}
+.resumo b{display:block;font-size:1.4rem}
+.resumo span{font-size:.76rem;color:var(--suave)}
+.resumo button[aria-pressed=true]{outline:2px solid var(--azul2)}
+.grupo{margin:16px 0 4px}
+.grupo h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--suave);margin:0 0 6px;display:flex;justify-content:space-between}
+.lista{background:#fff;border:1px solid var(--borda);border-radius:12px;overflow:hidden}
+.linha{display:flex;align-items:center;gap:10px;padding:12px 13px;text-decoration:none;color:inherit;border-top:1px solid #e6edf3}
+.linha:first-child{border-top:0}
+.linha:hover,.linha:focus{background:var(--azul-claro);outline:0}
+.linha .info{flex:1;min-width:0}
+.linha .tag{font-weight:750;font-size:1rem}
+.linha .det{font-size:.8rem;color:var(--suave);margin-top:2px}
+.linha .lado{text-align:right;flex:0 0 auto}
+.mini{width:74px;height:5px;background:#e3eaf0;border-radius:3px;margin:6px 0 0 auto;overflow:hidden}
+.mini div{height:100%;background:var(--verde)}
+.linha .seta{color:#9fb2c1;font-size:1.3rem}
+.vazio{text-align:center;color:var(--suave);padding:26px 10px}
 </style></head>
-<body><header><div class="wrap"><h1>Preventivas Telecom — P-76</h1><p>Selecione uma das sete ordens de manutenção para iniciar ou continuar a inspeção pelo PDA.</p></div></header>
-<main>
-<div class="intro"><strong>Registros separados por equipamento.</strong> A página inicial não salva nem apaga fotos. Os dados continuam no armazenamento do mesmo navegador e endereço do site. Faça backups no OneDrive corporativo e confira os arquivos antes de limpar o navegador.</div>
-<section><h2>PAGA — Caixas de distribuição Ex <span class="count">(2 OMs)</span></h2>
-<div class="grid">
-<a class="card" href="./paga.html?caixa=A"><div class="tag">CDI-5510505A</div><div class="om">OM 2032214967</div><div class="desc">Inspeção anual Ex PA/GA · 11 itens · Roteiro A3280-1A</div><span class="action">Abrir preventiva</span></a>
-<a class="card" href="./paga.html?caixa=B"><div class="tag">CDI-5510505B</div><div class="om">OM 2032214968</div><div class="desc">Inspeção anual Ex PA/GA · 11 itens · Roteiro A3280-1A</div><span class="action">Abrir preventiva</span></a>
-</div></section>
-<section><h2>PAGA — Caixas de distribuição IP66 <span class="count">(4 OMs)</span></h2><div class="grid">
-<a class="card" href="./ip66-paga.html?tag=CDI-5510502A"><div class="tag">CDI-5510502A</div><div class="om">OM 2032245980</div><div class="desc">Roteiro A3281 · 18 itens · potência e isolação</div><span class="action">Abrir preventiva</span></a>
-<a class="card" href="./ip66-paga.html?tag=CDI-5510502B"><div class="tag">CDI-5510502B</div><div class="om">OM 2032245982</div><div class="desc">Roteiro A3281 · 18 itens · potência e isolação</div><span class="action">Abrir preventiva</span></a>
-<a class="card" href="./ip66-paga.html?tag=CDI-5510503A"><div class="tag">CDI-5510503A</div><div class="om">OM 2032245984</div><div class="desc">Roteiro A3281 · 18 itens · potência e isolação</div><span class="action">Abrir preventiva</span></a>
-<a class="card" href="./ip66-paga.html?tag=CDI-5510503B"><div class="tag">CDI-5510503B</div><div class="om">OM 2032245985</div><div class="desc">Roteiro A3281 · 18 itens · potência e isolação</div><span class="action">Abrir preventiva</span></a>
-</div></section>
-<section><h2>Telefonia — Caixa de distribuição IP66 <span class="count">(1 OM)</span></h2>
-<div class="grid">
-<a class="card" href="./cdt.html"><div class="tag">CDT-5510504</div><div class="om">OM 2032659022</div><div class="desc">Inspeção anual de caixa IP66 de telefonia · 9 itens · Roteiro A3309-1A</div><span class="action">Abrir preventiva</span></a>
-</div></section>
-<p class="note">As inspeções permanecem em páginas próprias. Fotografias na resolução original, quando preservadas pelo PDA, devem ser exportadas para o OneDrive. Novas preventivas poderão ser acrescentadas ao menu sem modificar os dados das anteriores.</p>
-</main><footer>Portal de apoio às inspeções de telecomunicações • P-76</footer></body></html>
+<body>
+<header class="topo"><div class="wrap">
+  <h1>Preventivas Telecom — P-76</h1>
+  <p>Escolha a ordem de manutenção para iniciar ou continuar a inspeção.</p>
+</div></header>
+
+<main class="wrap" style="padding-top:0">
+  <div class="resumo" id="resumo"></div>
+  <div class="busca">
+    <input id="q" type="search" placeholder="Buscar TAG, OM ou roteiro…" aria-label="Buscar preventiva" autocomplete="off">
+    <div class="chips" id="chipsSistema" aria-label="Filtrar por sistema"></div>
+  </div>
+  <div id="lista"><p class="vazio">Carregando…</p></div>
+
+  <section class="card" style="margin-top:22px">
+    <h2>Backup geral</h2>
+    <p class="sub">Salva ou restaura todas as OMs de uma vez. Backups feitos nas versões anteriores do app também podem ser restaurados aqui.</p>
+    <div class="acoes">
+      <button class="btn" id="bkTudo" type="button">💾 Backup de todas (com fotos)</button>
+      <button class="btn" id="bkLeve" type="button">Backup de todas (sem fotos)</button>
+      <label class="btn" for="restaurar" style="margin:0">↩️ Restaurar backup</label>
+    </div>
+    <input type="file" id="restaurar" class="oculto" accept=".json,application/json">
+    <p class="msg" id="msg"></p>
+  </section>
+</main>
+<footer class="rodape">Portal de apoio às inspeções de telecomunicações • P-76</footer>
+
+<script src="dados.js"></script>
+<script src="nucleo.js"></script>
+<script>
+'use strict';
+const N=window.Nucleo,$=id=>document.getElementById(id);
+const estado={q:'',sistema:'',situacao:''};
+try{Object.assign(estado,JSON.parse(sessionStorage.getItem('p76-filtro')||'{}'))}catch(e){}
+let registros={},carregado=false;
+
+const semAcento=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function guardarFiltro(){try{sessionStorage.setItem('p76-filtro',JSON.stringify(estado))}catch(e){}}
+function el(tag,props={},...f){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...f);return e}
+function situacaoDe(o){const r=registros[o.tag];return r?N.progresso(r):{situacao:'nova',feitos:0,total:N.roteiro(o).itens.length,pend:0}}
+
+function desenhar(){
+  // Resumo (toque para filtrar)
+  const cont={nova:0,and:0,ok:0,nc:0};P76.oms.forEach(o=>cont[situacaoDe(o).situacao]++);
+  const resumo=$('resumo');resumo.replaceChildren();
+  for(const [k,rot,n] of [['nova','Não iniciadas',cont.nova],['and','Em andamento',cont.and+cont.nc],['ok','Concluídas',cont.ok]]){
+    const b=el('button',{type:'button','aria-pressed':String(estado.situacao===k)},el('b',{},carregado?String(n):'–'),el('span',{},rot));
+    b.onclick=()=>{estado.situacao=estado.situacao===k?'':k;guardarFiltro();desenhar()};resumo.append(b);
+  }
+  // Chips de sistema
+  const chips=$('chipsSistema');chips.replaceChildren();
+  const opcoes=[['','Todos',P76.oms.length],...Object.entries(P76.sistemas).map(([k,v])=>[k,v.replace(/ — .*/,'')+' · '+v.replace(/.* — /,'').replace('Caixas de distribuição','CX'),P76.oms.filter(o=>o.sistema===k).length])];
+  for(const [k,rot,n] of opcoes){const c=el('button',{type:'button',class:'chip','aria-pressed':String(estado.sistema===k)},rot,el('span',{class:'n'},String(n)));c.onclick=()=>{estado.sistema=k;guardarFiltro();desenhar()};chips.append(c)}
+  // Lista filtrada
+  const termo=semAcento(estado.q.trim());
+  const visiveis=P76.oms.filter(o=>{
+    if(estado.sistema&&o.sistema!==estado.sistema)return false;
+    const s=situacaoDe(o).situacao;
+    if(estado.situacao==='and'&&!(s==='and'||s==='nc'))return false;
+    if(estado.situacao&&estado.situacao!=='and'&&s!==estado.situacao)return false;
+    if(!termo)return true;
+    const r=N.roteiro(o);
+    return semAcento([o.tag,o.om,o.roteiro,r.codigo,r.resumo,P76.sistemas[o.sistema]].join(' ')).includes(termo)||semAcento(o.tag.replace(/-/g,'')).includes(termo.replace(/-/g,''));
+  });
+  const lista=$('lista');lista.replaceChildren();
+  if(!visiveis.length){lista.append(el('p',{class:'vazio'},'Nenhuma preventiva encontrada com esses filtros.'));return}
+  for(const [k,nome] of Object.entries(P76.sistemas)){
+    const doGrupo=visiveis.filter(o=>o.sistema===k);if(!doGrupo.length)continue;
+    const ul=el('div',{class:'lista'});
+    for(const o of doGrupo){
+      const p=situacaoDe(o),r=N.roteiro(o);
+      const lado=el('div',{class:'lado'},el('span',{class:'selo '+p.situacao},N.ROTULO[p.situacao]));
+      if(p.feitos&&p.situacao!=='ok'){const m=el('div',{class:'mini',title:p.feitos+'/'+p.total+' itens'});m.append(el('div',{style:'width:'+(100*p.feitos/p.total)+'%'}));lado.append(m)}
+      ul.append(el('a',{class:'linha',href:'preventiva.html?tag='+encodeURIComponent(o.tag)},
+        el('div',{class:'info'},el('div',{class:'tag'},o.tag),el('div',{class:'det'},'OM '+o.om+' · '+o.roteiro+' · '+r.itens.length+' itens'+(p.feitos?' · '+p.feitos+'/'+p.total+' feitos':''))),
+        lado,el('span',{class:'seta','aria-hidden':'true'},'›')));
+    }
+    lista.append(el('section',{class:'grupo'},el('h2',{},el('span',{},nome),el('span',{},String(doGrupo.length))),ul));
+  }
+}
+
+$('q').value=estado.q;
+$('q').addEventListener('input',()=>{estado.q=$('q').value;guardarFiltro();desenhar()});
+
+async function carregarTodos(){
+  registros={};
+  for(const o of P76.oms){try{const {registro,origem}=await N.carregar(o.tag);if(origem!=='novo')registros[o.tag]=registro}catch(e){}}
+  carregado=true;desenhar();
+}
+
+function msg(t,c){$('msg').textContent=t;$('msg').className='msg'+(c?' '+c:'')}
+async function todosRegistros(){const l=[];for(const o of P76.oms){const {registro,origem}=await N.carregar(o.tag);if(origem!=='novo')l.push(registro)}return l}
+$('bkTudo').onclick=async()=>{const l=await todosRegistros();if(!l.length){alert('Nenhuma preventiva iniciada.');return}const b=N.montarBackup(l,false);N.baixar(b,'P76_preventivas_backup_'+N.hoje()+'.json');msg('Backup de '+l.length+' OM(s), '+(b.size/1048576).toFixed(1)+' MB, solicitado. Confira no OneDrive.')};
+$('bkLeve').onclick=async()=>{const l=await todosRegistros();if(!l.length){alert('Nenhuma preventiva iniciada.');return}N.baixar(N.montarBackup(l,true),'P76_preventivas_backup_SEM_FOTOS_'+N.hoje()+'.json');msg('Backup sem fotos de '+l.length+' OM(s) solicitado.')};
+$('restaurar').onchange=async e=>{
+  const f=e.target.files?.[0];e.target.value='';if(!f)return;
+  try{
+    const regs=N.lerBackup(JSON.parse(await f.text())),tags=Object.keys(regs);
+    if(!tags.length)throw Error('nenhuma preventiva reconhecida no arquivo.');
+    if(!confirm('Restaurar '+tags.length+' OM(s): '+tags.join(', ')+'?\nOs dados atuais dessas OMs serão substituídos.'))return;
+    for(const t of tags)await N.salvar(regs[t]);
+    msg('Restaurado: '+tags.join(', ')+'.','ok');await carregarTodos();
+  }catch(err){msg('Não foi possível restaurar: '+err.message,'erro')}
+};
+
+desenhar();carregarTodos();N.registrarSW();N.pedirPersistencia();
+addEventListener('pageshow',e=>{if(e.persisted)carregarTodos()});
+</script>
+</body></html>
