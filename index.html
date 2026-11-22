@@ -70,7 +70,7 @@ let registros={},carregado=false;
 const semAcento=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 function guardarFiltro(){try{sessionStorage.setItem('p76-filtro',JSON.stringify(estado))}catch(e){}}
 function el(tag,props={},...f){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...f);return e}
-function situacaoDe(o){const r=registros[o.tag];return r?N.progresso(r):{situacao:'nova',feitos:0,total:N.roteiro(o).itens.length,pend:0}}
+function situacaoDe(o){const r=registros[o.tag];return r?N.progresso(r):{situacao:'nova',feitos:0,total:N.roteiro(o).itens.length*(o.tagsEquipamentos?.length||1),pend:0}}
 
 function desenhar(){
   // Resumo (toque para filtrar)
@@ -93,7 +93,7 @@ function desenhar(){
     if(estado.situacao&&estado.situacao!=='and'&&s!==estado.situacao)return false;
     if(!termo)return true;
     const r=N.roteiro(o);
-    return semAcento([o.tag,o.om,o.roteiro,r.codigo,r.resumo,P76.sistemas[o.sistema]].join(' ')).includes(termo)||semAcento(o.tag.replace(/-/g,'')).includes(termo.replace(/-/g,''));
+    return semAcento([o.tag,o.tituloCard||'',o.tagsEquipamentos?.join(' ')||'',o.om,o.roteiro,r.codigo,r.resumo,P76.sistemas[o.sistema]].join(' ')).includes(termo)||semAcento(o.tag.replace(/-/g,'')).includes(termo.replace(/-/g,''));
   });
   const lista=$('lista');lista.replaceChildren();
   if(!visiveis.length){lista.append(el('p',{class:'vazio'},'Nenhuma preventiva encontrada com esses filtros.'));return}
@@ -105,7 +105,7 @@ function desenhar(){
       const lado=el('div',{class:'lado'},el('span',{class:'selo '+p.situacao},N.ROTULO[p.situacao]));
       if(p.feitos&&p.situacao!=='ok'){const m=el('div',{class:'mini',title:p.feitos+'/'+p.total+' itens'});m.append(el('div',{style:'width:'+(100*p.feitos/p.total)+'%'}));lado.append(m)}
       ul.append(el('a',{class:'linha',href:'preventiva.html?tag='+encodeURIComponent(o.tag)},
-        el('div',{class:'info'},el('div',{class:'tag'},o.tag),el('div',{class:'det'},'OM '+o.om+' · '+o.roteiro+' · '+r.itens.length+' itens'+(p.feitos?' · '+p.feitos+'/'+p.total+' feitos':''))),
+        el('div',{class:'info'},el('div',{class:'tag'},o.tituloCard||o.tag),el('div',{class:'det'},'OM '+o.om+' · '+o.roteiro+' · '+(o.tagsEquipamentos?o.tagsEquipamentos.length+' TAGs · ':'')+r.itens.length+' itens'+(p.feitos?' · '+p.feitos+'/'+p.total+' marcados':''))),
         lado,el('span',{class:'seta','aria-hidden':'true'},'›')));
     }
     lista.append(el('section',{class:'grupo'},el('h2',{},el('span',{},nome),el('span',{},String(doGrupo.length))),ul));
