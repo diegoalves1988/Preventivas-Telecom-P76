@@ -176,7 +176,7 @@ function zip(arquivos){
 
 /* ---------- Backup / restauração (aceita também os backups das versões antigas) ---------- */
 function montarBackup(registros,semFotos){
-  const regs={};for(const r of registros){const c=structuredClone(r);if(semFotos)c.items.forEach(it=>it.photos=[]);regs[r.tag]=c}
+  const regs={};for(const r of registros){const c=structuredClone(r);if(semFotos){c.items.forEach(it=>it.photos=[]);if(c.tagItems)for(const items of Object.values(c.tagItems))items.forEach(it=>it.photos=[])}regs[r.tag]=c}
   return new Blob([JSON.stringify({app:'Preventivas-Telecom-P76',versao:1,criado:new Date().toISOString(),semFotos:!!semFotos,registros:regs})],{type:'application/json'});
 }
 function lerBackup(json){
