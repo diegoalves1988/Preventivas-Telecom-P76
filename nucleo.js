@@ -59,7 +59,8 @@ function novoRegistro(o){
     items:r.itens.map(()=>({status:'',obs:'',photos:[]})),
     power:h?h.potencia.map(()=>({measured:'',status:''})):[],
     isolation:h?h.isolacao.map(()=>({measured:'',unit:'MΩ',status:''})):[],
-    instrumentPower:'',instrumentIso:'',atualizado:null};
+    instrumentPower:'',instrumentIso:'',atualizado:null,
+    tagItems:o.tagsEquipamentos?Object.fromEntries(o.tagsEquipamentos.map(tag=>[tag,r.itens.map(()=>({status:'',obs:'',photos:[]}))])):null};
 }
 // Garante que um registro (novo, migrado ou restaurado) tem todos os campos esperados.
 function normalizar(o,r){
@@ -67,10 +68,23 @@ function normalizar(o,r){
   if(!r||!Array.isArray(r.items)||r.items.length!==base.items.length)return null;
   for(const k of ['name','company','hours','date','location','outcome','deviation','instrumentPower','instrumentIso'])base[k]=String(r[k]??'');
   base.items=r.items.map(it=>({status:['ES','EC','NE'].includes(it.status)?it.status:'',obs:String(it.obs??''),photos:(it.photos||[]).filter(p=>p&&p.preview)}));
+  if(o.tagsEquipamentos){
+    for(const tag of o.tagsEquipamentos){
+      const antigo=Array.isArray(r.tagItems?.[tag])?r.tagItems[tag]:[];
+      base.tagItems[tag]=base.tagItems[tag].map((v,i)=>{
+        const it=antigo[i];
+        return it?{status:['ES','EC','NE'].includes(it.status)?it.status:'',obs:String(it.obs??''),photos:(it.photos||[]).filter(p=>p&&p.preview)}:v;
+      });
+    }
+  }
   if(Array.isArray(r.power)&&r.power.length===base.power.length)base.power=r.power.map(x=>({measured:String(x.measured??''),status:x.status||''}));
   if(Array.isArray(r.isolation)&&r.isolation.length===base.isolation.length)base.isolation=r.isolation.map(x=>({measured:String(x.measured??''),unit:x.unit||'MΩ',status:x.status||''}));
   let max=0;base.items.forEach(it=>it.photos.forEach(p=>max=Math.max(max,Number(p.seq)||0)));
   base.items.forEach(it=>it.photos.forEach(p=>{if(!p.seq)p.seq=++max}));
+  if(base.tagItems){for(const items of Object.values(base.tagItems)){
+    items.forEach(it=>it.photos.forEach(p=>max=Math.max(max,Number(p.seq)||0)));
+    items.forEach(it=>it.photos.forEach(p=>{if(!p.seq)p.seq=++max}));
+  }}
   base.nextPhoto=Math.max(Number(r.nextPhoto)||1,max+1);
   base.atualizado=r.atualizado||null;
   return base;
@@ -132,10 +146,11 @@ async function blobDaFoto(p){
 }
 
 /* ---------- Progresso ---------- */
-function iniciada(r){return r.items.some(it=>it.status||it.obs||it.photos.length)||!!(r.name||r.company||r.hours||r.outcome)}
+function iniciada(r){const itens=r.tagItems?Object.values(r.tagItems).flat():r.items;return itens.some(it=>it.status||it.obs||it.photos.length)||!!(r.name||r.company||r.hours||r.outcome)}
 function progresso(r){
-  const total=r.items.length,feitos=r.items.filter(it=>it.status).length;
-  const pend=r.items.filter(it=>(it.status==='EC'||it.status==='NE')&&!it.obs.trim()).length;
+  const itens=r.tagItems?Object.values(r.tagItems).flat():r.items;
+  const total=itens.length,feitos=itens.filter(it=>it.status).length;
+  const pend=itens.filter(it=>(it.status==='EC'||it.status==='NE')&&!it.obs.trim()).length;
   let situacao='nova';
   if(r.outcome==='CONCLUÍDA')situacao='ok';
   else if(r.outcome==='NÃO CONCLUÍDA'||r.outcome==='NÃO EXECUTADA')situacao='nc';
