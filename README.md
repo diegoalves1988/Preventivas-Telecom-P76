@@ -33,3 +33,11 @@ Ao abrir uma OM pela primeira vez na versão nova, o app procura o registro das 
 ## Exportação SAP A3281
 
 Nas OMs com roteiro A3281-1A, o TXT começa diretamente no código `A3281-1A.IMO_.INSPEC.CX DISTR.IP66 PA/GA`. O cabeçalho de OM e a data/hora copiados do OneNote não são exportados.
+
+## Novas OMs — 22/11/2026
+
+Foram incluídas as caixas Ex de telefonia **CDT-1415001** (2032246611), **CDT-1417001** (2032246612), **CDT-1421001** (2032659046) e **CDT-5510501** (2032246610), todas pelo roteiro **A3308-1A** de 11 itens.
+
+A OM de **telefones Ex vinculada à CDT-1421001** (2032658978) utiliza o roteiro **A3307-2A** de 14 itens e contém **10 TAGs individuais**. Use o seletor de equipamentos na tela de inspeção para registrar status, observações e fotos separadamente. **Todos os status são criados em branco**, sem importar os ES escritos no texto de referência. O TXT reúne as duas matrizes de TAG/tarefa do SAP e um registro complementar do item 10, que não consta nas colunas da matriz de origem.
+
+Os códigos das novas OMs começam diretamente no código do roteiro na exportação TXT, sem as linhas iniciais do OneNote. Os backups leves removem as fotos também da OM com múltiplas TAGs.
