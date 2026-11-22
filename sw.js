@@ -1,7 +1,7 @@
 /* Mantém o app abrindo sem internet. Sempre tenta a versão mais nova da rede primeiro;
    sem rede, usa a última cópia guardada no PDA. */
-const CACHE='p76-preventivas-v3';
-const ARQUIVOS=['./','index.html','preventiva.html','estilo.css','nucleo.js','dados.js','paga.html','ip66-paga.html','cdt.html'];
+const CACHE='p76-preventivas-v4-12oms';
+const ARQUIVOS=['./','index.html','preventiva.html','estilo.css?v=20261122-12oms','nucleo.js?v=20261122-12oms','dados.js?v=20261122-12oms','paga.html','ip66-paga.html','cdt.html'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ARQUIVOS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('p76-preventivas-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
