@@ -300,6 +300,7 @@ function exportarTelefone(){
   R.itens.slice(0,12).forEach((x,i)=>L.push(String(i+1).padStart(2,'0')+' '+x,''));
   const divisao='--------------------------------------------------------------';
   for(const cols of R.colunasTabelaTags){L.push(divisao,...exportarTabelaTag(cols),'')}
+  L.push('CONTROLE COMPLEMENTAR — ITEM 10 (não consta nas colunas da tabela original)',...exportarTabelaTag([10]),'');
   L.push('OBS:');
   for(const tag of O.tagsEquipamentos){
     const detalhamento=reg.tagItems[tag].flatMap((it,i)=>{
