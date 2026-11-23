@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#123b56"><title>Preventivas Telecom | P-76</title>
-<link rel="stylesheet" href="estilo.css?v=20261122-12oms">
+<link rel="stylesheet" href="estilo.css?v=20261123">
 <style>
 .busca{position:sticky;top:0;z-index:5;background:var(--fundo);padding:10px 0 6px}
 .busca input{font-size:1rem;padding:12px 12px 12px 38px!important;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%235f7487' stroke-width='2.2'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E") no-repeat 12px center}
@@ -29,20 +29,44 @@
 .mini div{height:100%;background:var(--verde)}
 .linha .seta{color:#9fb2c1;font-size:1.3rem}
 .vazio{text-align:center;color:var(--suave);padding:26px 10px}
+.painel{background:var(--azul);color:#fff;border-radius:14px;padding:14px;margin-top:12px}
+.painel-topo{display:flex;align-items:flex-end;gap:14px}
+.painel-topo>div:first-child{flex:1}
+.painel-topo b{font-size:2rem;line-height:1;display:block}
+.painel-topo span{font-size:.8rem;color:#cfe0ec}
+.painel-num{text-align:center;background:#ffffff1a;border-radius:10px;padding:6px 10px;min-width:56px}
+.painel-num span{display:block;font-size:1.25rem;font-weight:750;color:#fff}
+.painel-num small{font-size:.7rem;color:#cfe0ec}
+.painel-barra{height:8px;background:#ffffff26;border-radius:4px;margin:12px 0 6px;overflow:hidden}
+.painel-barra div{height:100%;background:#5fd39a}
+.painel .sub{color:#cfe0ec;margin:4px 0}
+.painel details{background:#fff;color:var(--texto);border-radius:10px;padding:2px 10px;margin-top:10px}
+.anom{display:block;text-decoration:none;color:inherit;border-top:1px solid #e6edf3;padding:8px 0;font-size:.84rem}
+.anom:first-child{border-top:0}
+.anom b{margin-right:6px}
+.anom .o{color:var(--suave);display:block;margin-top:2px;overflow-wrap:anywhere}
+.lista-info{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 0}
 </style></head>
 <body>
 <header class="topo"><div class="wrap">
   <h1>Preventivas Telecom — P-76</h1>
-  <p>Escolha a ordem de manutenção para iniciar ou continuar a inspeção. · 12 OMs cadastradas</p>
+  <p id="subtitulo">Escolha a ordem de manutenção para iniciar ou continuar a inspeção.</p>
 </div></header>
 
 <main class="wrap" style="padding-top:0">
+  <section class="painel" id="painel" aria-label="Visão geral da campanha">
+    <div class="painel-topo"><div><b id="pctGeral">–</b><span>dos itens inspecionados</span></div><div class="painel-num"><span id="nEC">–</span><small>EC</small></div><div class="painel-num"><span id="nNE">–</span><small>NE</small></div></div>
+    <div class="painel-barra"><div id="barraGeral" style="width:0"></div></div>
+    <p class="sub" id="painelTexto"></p>
+    <details id="anomDet"><summary id="anomTitulo">Anomalias encontradas</summary><div id="anomLista"></div>
+      <div class="acoes"><button class="btn" id="csvAnom" type="button">📊 Exportar anomalias (CSV / Excel)</button></div></details>
+  </section>
   <div class="resumo" id="resumo"></div>
   <div class="busca">
     <input id="q" type="search" placeholder="Buscar TAG, OM ou roteiro…" aria-label="Buscar preventiva" autocomplete="off">
     <div class="chips" id="chipsSistema" aria-label="Filtrar por sistema"></div>
   </div>
-  <div class="acoes" style="justify-content:space-between;align-items:center;margin:10px 0"><span class="sub">Catálogo atualizado em 22/11/2026 — 12 OMs</span><button id="resetarFiltros" type="button" class="btn" style="flex:0 0 auto">↻ Mostrar todas / Atualizar</button></div><div id="lista"><p class="vazio">Carregando…</p></div>
+  <div class="lista-info"><span class="sub" id="infoLista"></span><button id="resetarFiltros" type="button" class="btn peq">↻ Limpar filtros e atualizar</button></div><div id="lista"><p class="vazio">Carregando…</p></div>
 
   <section class="card" style="margin-top:22px">
     <h2>Backup geral</h2>
@@ -56,15 +80,15 @@
     <p class="msg" id="msg"></p>
   </section>
 </main>
-<footer class="rodape">Portal de apoio às inspeções de telecomunicações • P-76</footer>
+<footer class="rodape">Portal de apoio às inspeções de telecomunicações • P-76<br><span id="statusRede"></span> · versão 23/11/2026</footer>
 
-<script src="dados.js?v=20261122-12oms"></script>
-<script src="nucleo.js?v=20261122-12oms"></script>
+<script src="dados.js?v=20261123"></script>
+<script src="nucleo.js?v=20261123"></script>
 <script>
 'use strict';
 const N=window.Nucleo,$=id=>document.getElementById(id);
 const estado={q:'',sistema:'',situacao:''};
-try{if(sessionStorage.getItem('p76-versao-catalogo')!=='12oms-20261122'){sessionStorage.removeItem('p76-filtro');sessionStorage.setItem('p76-versao-catalogo','12oms-20261122')}else Object.assign(estado,JSON.parse(sessionStorage.getItem('p76-filtro')||'{}'))}catch(e){}
+try{if(sessionStorage.getItem('p76-versao-catalogo')!=='20261123'){sessionStorage.removeItem('p76-filtro');sessionStorage.setItem('p76-versao-catalogo','20261123')}else Object.assign(estado,JSON.parse(sessionStorage.getItem('p76-filtro')||'{}'))}catch(e){}
 let registros={},carregado=false;
 
 const semAcento=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
@@ -72,7 +96,34 @@ function guardarFiltro(){try{sessionStorage.setItem('p76-filtro',JSON.stringify(
 function el(tag,props={},...f){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...f);return e}
 function situacaoDe(o){const r=registros[o.tag];return r?N.progresso(r):{situacao:'nova',feitos:0,total:N.roteiro(o).itens.length*(o.tagsEquipamentos?.length||1),pend:0}}
 
+function desenharPainel(){
+  let feitos=0,total=0;const anom=[];
+  for(const o of P76.oms){const p=situacaoDe(o);feitos+=p.feitos;total+=p.total;const r=registros[o.tag];if(r)anom.push(...N.anomalias(o,r))}
+  const pct=total?Math.round(100*feitos/total):0;
+  $('pctGeral').textContent=carregado?pct+'%':'–';$('barraGeral').style.width=pct+'%';
+  const ec=anom.filter(a=>a.status==='EC').length,ne=anom.filter(a=>a.status==='NE').length;
+  $('nEC').textContent=carregado?ec:'–';$('nNE').textContent=carregado?ne:'–';
+  const conc=P76.oms.filter(o=>situacaoDe(o).situacao==='ok').length;
+  $('painelTexto').textContent=feitos+' de '+total+' verificações · '+conc+' de '+P76.oms.length+' OMs concluídas';
+  $('anomTitulo').textContent=anom.length?'Anomalias encontradas ('+anom.length+')':'Nenhuma anomalia registrada';
+  const l=$('anomLista');l.replaceChildren();
+  for(const a of anom){
+    const href='preventiva.html?tag='+encodeURIComponent(a.tag)+(a.equipamento!==a.tag&&typeof a.item==='number'?'&eq='+encodeURIComponent(a.equipamento):'')+(typeof a.item==='number'?'#item'+(a.item-1):'');
+    l.append(el('a',{class:'anom',href},el('span',{class:'selo '+(a.status==='EC'?'and':'nova')},a.status),' ',el('b',{},a.equipamento),typeof a.item==='number'?'item '+String(a.item).padStart(2,'0'):a.item,el('span',{class:'o'},(a.nome!==a.equipamento?a.nome+' · ':'')+'OM '+a.om+' — '+(a.obs||'(sem OBS)'))));
+  }
+  $('csvAnom').disabled=!anom.length;
+  window.__anom=anom;
+}
+$('csvAnom').onclick=()=>{
+  const linhas=[['OM','Preventiva','Equipamento / cabo','Item','Status','Observação','Texto do item','Data','Executante']];
+  for(const a of window.__anom||[]){const r=registros[a.tag];linhas.push([a.om,a.nome,a.equipamento,a.item,a.status,a.obs,a.texto,r?.date?r.date.split('-').reverse().join('/'):'',r?.name||''])}
+  N.baixar(N.csv(linhas),'P76_anomalias_'+N.hoje()+'.csv');msg('Planilha de anomalias gerada.');
+};
+function atualizarRede(){$('statusRede').textContent=navigator.onLine?'● online':'● sem internet — usando cópia guardada no aparelho'}
+addEventListener('online',atualizarRede);addEventListener('offline',atualizarRede);atualizarRede();
+
 function desenhar(){
+  desenharPainel();
   // Resumo (toque para filtrar)
   const cont={nova:0,and:0,ok:0,nc:0};P76.oms.forEach(o=>cont[situacaoDe(o).situacao]++);
   const resumo=$('resumo');resumo.replaceChildren();
@@ -95,6 +146,7 @@ function desenhar(){
     const r=N.roteiro(o);
     return semAcento([o.tag,o.tituloCard||'',o.tagsEquipamentos?.join(' ')||'',o.om,o.roteiro,r.codigo,r.resumo,P76.sistemas[o.sistema]].join(' ')).includes(termo)||semAcento(o.tag.replace(/-/g,'')).includes(termo.replace(/-/g,''));
   });
+  $('infoLista').textContent=visiveis.length===P76.oms.length?P76.oms.length+' OMs cadastradas':'Mostrando '+visiveis.length+' de '+P76.oms.length+' OMs';
   const lista=$('lista');lista.replaceChildren();
   if(!visiveis.length){lista.append(el('p',{class:'vazio'},'Nenhuma preventiva encontrada com esses filtros.'));return}
   for(const [k,nome] of Object.entries(P76.sistemas)){

@@ -106,3 +106,49 @@ details{margin:6px 0}
 summary{cursor:pointer;font-weight:650;padding:6px 0}
 pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:.83rem;color:#34505f}
 .rodape{text-align:center;color:#7b8d9c;font-size:.78rem;padding:10px 14px 30px}
+
+/* ---- Agilidade no campo (2026-11-23) ---- */
+.barra .id{background:none;border:0;color:#fff;text-align:left;cursor:pointer;padding:2px 0}
+.cab-itens{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.cab-itens h2{margin:0}
+.btn:disabled{opacity:.45;cursor:default}
+.aviso.ok{background:var(--verde-claro);color:var(--verde)}
+.fab{position:fixed;right:14px;bottom:16px;z-index:20;background:var(--azul2);color:#fff;border:0;border-radius:99px;padding:13px 18px;font-weight:700;box-shadow:0 4px 14px #0004;cursor:pointer}
+.piscar{animation:piscar 1.2s ease}
+@keyframes piscar{0%,60%{background:#fff3c4}100%{background:transparent}}
+.frases{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.frases .chip{font-size:.75rem;padding:6px 10px;text-align:left;white-space:normal}
+.chip{border:1px solid #c3d3df;background:#fff;color:#2b4a60;border-radius:99px;padding:7px 12px;font-size:.84rem;font-weight:600;cursor:pointer}
+.chip .n{opacity:.7;margin-left:5px;font-weight:500}
+.linha-ec td{background:var(--vermelho-claro)}
+.visor{position:fixed;inset:0;z-index:50;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;color:#fff;font-size:.85rem}
+.visor img{max-width:100%;max-height:85vh;object-fit:contain}
+.foto img{cursor:zoom-in}
+
+/* Alternância por item / por TAG */
+.alternar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 4px;background:#e8eff5;padding:4px;border-radius:11px}
+.alternar button{border:0;border-radius:8px;padding:9px 6px;background:none;font-weight:700;color:#3c5a70;cursor:pointer}
+.alternar button small{display:block;font-weight:500;font-size:.72rem;opacity:.8}
+.alternar button[aria-selected=true]{background:#fff;color:var(--azul);box-shadow:0 1px 4px #0002}
+.tags-rolagem{display:flex;gap:6px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none}
+.tags-rolagem::-webkit-scrollbar{display:none}
+.tagchip{flex:0 0 auto}
+.tagchip.completa{border-color:#8fcfb0;background:var(--verde-claro);color:var(--verde)}
+.tagchip.ativo{background:var(--azul2);border-color:var(--azul2);color:#fff}
+
+/* Matriz: um item, todas as TAGs */
+.todas{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 6px}
+.eq-lista{border:1px solid var(--borda);border-radius:10px;overflow:hidden}
+.eq{border-top:1px solid #e6edf3;padding:6px 8px;scroll-margin-top:80px}
+.eq:first-child{border-top:0}
+.eq.s-ES{background:#f3faf6}.eq.s-EC{background:#fff8ea}.eq.s-NE{background:#f2f4f6}
+.eq-topo{display:flex;align-items:center;gap:6px}
+.eq-tag{flex:1;min-width:0;font-weight:700;font-size:.84rem;overflow-wrap:anywhere}
+.status.compacto{margin:0;flex:0 0 auto;gap:4px}
+.status.compacto label{flex:0 0 auto}
+.status.compacto span{padding:8px 0;width:44px;font-size:.82rem}
+.eq-mais{flex:0 0 auto;min-width:40px;height:36px;border:1px solid #c2d0dc;background:#fff;border-radius:8px;font-size:.8rem;cursor:pointer;color:var(--azul2);font-weight:700}
+.eq-det{padding:4px 0 6px}
+.item.multi.ok .num{background:var(--verde);color:#fff}
+.item.multi.alerta .num{background:#c77d00;color:#fff}
+@media(max-width:360px){.status.compacto span{width:38px}}

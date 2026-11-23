@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#123b56"><title>Preventiva | P-76</title>
-<link rel="stylesheet" href="estilo.css?v=20261122-12oms"></head>
+<link rel="stylesheet" href="estilo.css?v=20261123"></head>
 <body>
 <div class="barra"><div class="wrap">
   <a class="voltar" href="./" aria-label="Voltar ao início">←</a>
-  <div class="id"><b id="tagTopo">Carregando…</b><small id="progTopo"></small></div>
+  <button class="id" id="idTopo" type="button" title="Ir para o próximo item pendente"><b id="tagTopo">Carregando…</b><small id="progTopo"></small></button>
   <button class="salvar" id="salvarSair" type="button">💾 Salvar e sair</button>
 </div><div class="progresso"><div id="barraProg" style="width:0"></div></div></div>
 
@@ -23,24 +23,25 @@
     <div><label for="date">Data da inspeção</label><input id="date" type="date"></div>
     <div><label for="location">Localização (opcional)</label><input id="location" placeholder="Localização da caixa"></div>
   </div>
+  <p class="sub" id="notaPerfil" hidden>Executante, empresa e HH preenchidos com os dados da sua última inspeção.</p>
   <div id="obsRoteiro"></div>
 </section>
 
-<section id="secaoEquipamentos" class="card" hidden>
-  <h2>Equipamentos desta OM</h2>
-  <p class="sub">Selecione uma TAG para preencher os 14 itens. <b>Todos os status começam em branco</b>; os ES do texto fornecido não foram importados.</p>
-  <label for="equipamentoAtivo">TAG em inspeção</label>
-  <select id="equipamentoAtivo"></select>
-  <p id="progressoEquip" class="sub"></p>
-  <div class="acoes">
-    <button type="button" id="equipAnterior" class="btn">← TAG anterior</button>
-    <button type="button" id="equipProximo" class="btn">Próxima TAG →</button>
-  </div>
-</section>
-
 <section class="card">
-  <h2 id="tituloItens">Roteiro SAP</h2>
-  <p class="sub">ES = executado sem anormalidade · EC = executado com anormalidade · NE = não executado. Em EC ou NE a OBS é obrigatória.</p>
+  <div class="cab-itens">
+    <h2 id="tituloItens">Roteiro SAP</h2>
+    <button type="button" class="btn peq" id="marcarES">✓ Marcar em branco como ES</button>
+  </div>
+  <p class="sub">ES = sem anormalidade · EC = com anormalidade · NE = não executado. Em EC ou NE a OBS é obrigatória.</p>
+  <div id="modoMulti" hidden>
+    <div class="alternar" role="tablist" aria-label="Forma de preenchimento">
+      <button type="button" role="tab" id="modoItem">Por item <small>todas as TAGs juntas</small></button>
+      <button type="button" role="tab" id="modoTag">Por TAG <small>um equipamento por vez</small></button>
+    </div>
+    <div id="seletorTag" hidden>
+      <div class="tags-rolagem" id="tagsChips"></div>
+    </div>
+  </div>
   <div id="itens"></div>
 </section>
 
@@ -57,8 +58,9 @@
   <h2>Exportar e fazer backup</h2>
   <p id="msgSalvo" class="msg"></p>
   <div class="acoes">
-    <button class="btn prim" id="txt" type="button">📄 Exportar roteiro preenchido (TXT)</button>
-    <button class="btn prim" id="compartilhar" type="button">📤 Enviar todas as fotos</button>
+    <button class="btn prim" id="txt" type="button">📄 Roteiro preenchido para o SAP (TXT)</button>
+    <button class="btn prim" id="relatorio" type="button">🖨️ Relatório com fotos (PDF)</button>
+    <button class="btn" id="compartilhar" type="button">📤 Enviar todas as fotos</button>
     <button class="btn" id="zipFotos" type="button">🗜️ Fotos em ZIP</button>
     <button class="btn" id="backup" type="button">💾 Backup desta OM (com fotos)</button>
     <button class="btn" id="backupLeve" type="button">Backup leve (sem fotos)</button>
@@ -66,7 +68,7 @@
   </div>
   <input type="file" id="restaurar" class="oculto" accept=".json,application/json">
   <details><summary>Como garantir que nada se perca</summary>
-    <p class="sub">Os dados ficam gravados no navegador do PDA, que pode ser limpo pelo sistema. Ao terminar, envie o TXT e as fotos ao OneDrive corporativo e confira se chegaram. As fotos originais ficam guardadas separadamente no PDA; o backup JSON leva cópias otimizadas (até 1600 px), não os originais. Se o envio em lote ou o ZIP não chegar ao OneDrive, use “Enviar” em cada foto e faça também o backup leve.</p>
+    <p class="sub">Os dados ficam gravados no navegador do PDA, que pode ser limpo pelo sistema. Ao terminar, envie o TXT, o relatório e as fotos ao OneDrive corporativo e confira se chegaram. As fotos originais ficam guardadas separadamente no PDA; o backup JSON leva cópias otimizadas (até 1600 px), não os originais. Se o envio em lote ou o ZIP não chegar ao OneDrive, use “Enviar” em cada foto e faça também o backup leve.</p>
   </details>
 </section>
 
@@ -77,15 +79,35 @@
 </section>
 </div>
 </main>
+<button type="button" id="proximo" class="fab" hidden>↓ Próximo pendente</button>
 
-<script src="dados.js?v=20261122-12oms"></script>
-<script src="nucleo.js?v=20261122-12oms"></script>
+<script src="dados.js?v=20261123"></script>
+<script src="nucleo.js?v=20261123"></script>
 <script>
 'use strict';
 const N=window.Nucleo,$=id=>document.getElementById(id);
 const CAMPOS=['name','company','hours','date','location','outcome','deviation'];
-let O,R,reg,timer,cadeia=Promise.resolve(),tagAtiva='';
-function itensAtivos(){return O?.tagsEquipamentos?reg.tagItems[tagAtiva]:reg.items}
+let O,R,reg,timer,cadeia=Promise.resolve(),MULTI=false,modo='item',tagAtiva='';
+let atualizadores=[];
+
+/* ---------- Utilidades ---------- */
+function el(tag,props={},...filhos){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k==='dataset')Object.assign(e.dataset,v);else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...filhos.filter(x=>x!=null));return e}
+const n2=i=>String(i+1).padStart(2,'0');
+const precisaObs=it=>(it.status==='EC'||it.status==='NE')&&!it.obs.trim();
+const pendente=it=>!it.status||precisaObs(it);
+function todosItens(){ // [{tag,i,it}] na ordem do roteiro
+  if(!MULTI)return reg.items.map((it,i)=>({tag:O.tag,i,it}));
+  const l=[];R.itens.forEach((_,i)=>O.tagsEquipamentos.forEach(tag=>l.push({tag,i,it:reg.tagItems[tag][i]})));return l;
+}
+
+/* ---------- Perfil do executante (lembrado no aparelho) ---------- */
+function lerPerfil(){try{return JSON.parse(localStorage.getItem('p76-perfil')||'{}')}catch(e){return {}}}
+function guardarPerfil(){try{localStorage.setItem('p76-perfil',JSON.stringify({name:reg.name,company:reg.company,hours:reg.hours}))}catch(e){}}
+
+/* ---------- Frases rápidas de OBS ---------- */
+const FRASES_PADRAO=['SEM ANORMALIDADES.','EQUIPAMENTO INSTALADO ACIMA DE 2m. REALIZADA SOMENTE INSPEÇÃO VISUAL.','TAREFA NÃO APLICÁVEL A ESTE TIPO DE EQUIPAMENTO.','ABERTA NOTA Nº  PARA CORREÇÃO.','NÃO EXECUTADO POR FALTA DE ACESSO AO EQUIPAMENTO.','NÃO EXECUTADO POR FALTA DE LIBERAÇÃO DA ÁREA.'];
+function lerFrases(){try{return JSON.parse(localStorage.getItem('p76-frases')||'[]')}catch(e){return []}}
+function guardarFrase(t){t=t.trim();if(t.length<4||t.length>240)return;try{const l=[t,...lerFrases().filter(x=>x!==t)].slice(0,8);localStorage.setItem('p76-frases',JSON.stringify(l))}catch(e){}}
 
 /* ---------- Gravação ---------- */
 function msg(t,classe){const m=$('msgSalvo');m.textContent=t;m.className='msg'+(classe?' '+classe:'')}
@@ -96,92 +118,207 @@ function gravarAgora(){
   return cadeia.then(()=>{msg('Gravado no PDA às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'. Faça backup no OneDrive ao terminar.','ok');return true})
     .catch(e=>{msg('ATENÇÃO: NÃO SALVO no PDA ('+(e?.message||e)+'). Não feche a página; envie as fotos ao OneDrive.','erro');return false});
 }
-$('salvarSair').onclick=async()=>{
-  const b=$('salvarSair');if(!reg){location.assign('./');return}
-  b.disabled=true;b.textContent='Gravando…';
+async function sairPara(url){
+  if(!reg){location.assign(url);return}
   const ok=await gravarAgora();
-  if(ok)location.assign('./');
-  else{alert('Não foi possível confirmar a gravação. Os dados continuam na tela: não feche a aba e exporte um backup.');b.disabled=false;b.textContent='💾 Salvar e sair'}
-};
+  if(ok)location.assign(url);
+  else alert('Não foi possível confirmar a gravação. Os dados continuam na tela: não feche a aba e exporte um backup.');
+}
+$('salvarSair').onclick=async()=>{const b=$('salvarSair');b.disabled=true;b.textContent='Gravando…';await sairPara('./');b.disabled=false;b.textContent='💾 Salvar e sair'};
 addEventListener('pagehide',()=>{if(reg)gravarAgora()});
 
-/* ---------- Progresso ---------- */
+/* ---------- Progresso e pendências ---------- */
 function atualizarProgresso(){
   const p=N.progresso(reg);
-  $('progTopo').textContent='OM '+O.om+' · '+p.feitos+'/'+p.total+' itens'+(p.pend?' · '+p.pend+' sem OBS':'');
+  $('progTopo').textContent='OM '+O.om+' · '+p.feitos+'/'+p.total+' marcados'+(p.pend?' · '+p.pend+' sem OBS':'');
   $('barraProg').style.width=(100*p.feitos/p.total)+'%';
-  itensAtivos().forEach((it,i)=>{const el=document.getElementById('item'+i);if(!el)return;
-    el.className='item'+(it.status==='ES'?' ok':it.status==='EC'?' alerta':it.status==='NE'?' ne':'');
-    const ta=el.querySelector('textarea'),falta=(it.status==='EC'||it.status==='NE')&&!it.obs.trim();
-    ta.classList.toggle('falta',falta);el.querySelector('.aviso-obs').hidden=!falta});
-  if(O.tagsEquipamentos){const x=itensAtivos(),feitos=x.filter(i=>i.status).length;
-    $('progressoEquip').textContent=tagAtiva+' · '+feitos+'/'+x.length+' itens marcados';
-  }
+  atualizadores.forEach(f=>f());
   const lista=verificar();
-  $('pendencias').innerHTML='';
-  if(lista.length){const p=document.createElement('p');p.className='aviso';p.textContent='Pendências: '+lista.slice(0,6).join(' · ')+(lista.length>6?' · +'+(lista.length-6):'');$('pendencias').append(p)}
+  $('pendencias').replaceChildren();
+  if(lista.length)$('pendencias').append(el('p',{class:'aviso'},'Pendências: '+lista.slice(0,6).join(' · ')+(lista.length>6?' · +'+(lista.length-6):'')));
+  else $('pendencias').append(el('p',{class:'aviso ok'},'✓ Todos os itens preenchidos. Selecione a situação da operação e exporte.'));
+  const np=todosItens().filter(x=>pendente(x.it)).length;
+  $('proximo').hidden=!np;$('proximo').textContent='↓ Próximo pendente ('+np+')';
+  const vazios=todosItens().filter(x=>!x.it.status).length;
+  $('marcarES').disabled=!vazios;
 }
 function verificar(){
   const e=[];
-  if(O.tagsEquipamentos){for(const tag of O.tagsEquipamentos)reg.tagItems[tag].forEach((x,i)=>{
-    if(!x.status)e.push(tag+': item '+(i+1)+' sem status');
-    else if(x.status!=='ES'&&!x.obs.trim())e.push(tag+': item '+(i+1)+' sem OBS');
-  })}else reg.items.forEach((x,i)=>{if(!x.status)e.push('item '+(i+1)+' sem status');else if(x.status!=='ES'&&!x.obs.trim())e.push('item '+(i+1)+' sem OBS')});
+  for(const {tag,i,it} of todosItens()){const pre=MULTI?tag+': ':'';if(!it.status)e.push(pre+'item '+(i+1)+' sem status');else if(precisaObs(it))e.push(pre+'item '+(i+1)+' sem OBS')}
   for(const [k,nome] of [['power','potência'],['isolation','isolação']])reg[k].forEach((m,i)=>{if(!m.status||(m.status!=='NE'&&!m.measured))e.push(nome+' linha '+(i+1)+' incompleta')});
   if(!reg.outcome)e.push('situação da operação não selecionada');
   return e;
 }
+function irProximoPendente(depoisDe){
+  const alvos=[...document.querySelectorAll('[data-pendente="1"]')];
+  let alvo=alvos[0];
+  if(depoisDe){const d=alvos.find(a=>depoisDe.compareDocumentPosition(a)&Node.DOCUMENT_POSITION_FOLLOWING&&!depoisDe.contains(a));if(d)alvo=d;else if(depoisDe)return}
+  if(!alvo&&MULTI&&modo==='tag'){const x=todosItens().find(x=>pendente(x.it));if(x){escolherTag(x.tag).then(()=>irProximoPendente());return}}
+  if(alvo){alvo.scrollIntoView({behavior:'smooth',block:'start'});alvo.classList.add('piscar');setTimeout(()=>alvo.classList.remove('piscar'),1200)}
+}
+$('proximo').onclick=()=>irProximoPendente();
+$('idTopo').onclick=()=>irProximoPendente();
 
-/* ---------- Itens ---------- */
-function el(tag,props={},...filhos){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...filhos);return e}
+$('marcarES').onclick=()=>{
+  const vazios=todosItens().filter(x=>!x.it.status);if(!vazios.length)return;
+  if(!confirm('Marcar '+vazios.length+' item(ns) ainda em branco como ES (executado sem anormalidade)?\n\nUse somente se todos foram realmente inspecionados. Itens já marcados não mudam.'))return;
+  vazios.forEach(x=>x.it.status='ES');desenharItens();agendar();
+};
+
+/* ---------- Componentes ---------- */
+function botoesStatus(it,nome,compacto,aoMudar){
+  const st=el('div',{class:'status'+(compacto?' compacto':''),role:'radiogroup'});
+  const opcoes=[['ES','sem anormalidade'],['EC','com anormalidade'],['NE','não executado']];
+  const inputs=[];
+  for(const [s,d] of opcoes){
+    const inp=el('input',{type:'radio',name:nome,value:s,checked:it.status===s});
+    inp.onclick=()=>{const antes=it.status;if(antes===s&&compacto){it.status='';inp.checked=false}else it.status=s;aoMudar(antes)};
+    inputs.push(inp);
+    st.append(el('label',{title:s+' — '+d},inp,el('span',{},s,compacto?null:el('small',{},d))));
+  }
+  st.sincronizar=()=>inputs.forEach(x=>x.checked=x.value===it.status);
+  return st;
+}
+function caixaObs(it,rotulo){
+  const area=el('div',{class:'obs'});
+  const ta=el('textarea',{value:it.obs,placeholder:'Observação (obrigatória para EC ou NE)'});ta.setAttribute('aria-label',rotulo);
+  const aviso=el('p',{class:'aviso-obs',hidden:true},'Informe a observação.');
+  const chips=el('div',{class:'frases',hidden:true});
+  function mostrarFrases(){
+    chips.replaceChildren();
+    const lista=[...new Set([...lerFrases(),...FRASES_PADRAO])].slice(0,10);
+    for(const f of lista){const c=el('button',{type:'button',class:'chip'},f);
+      c.onmousedown=e=>e.preventDefault();
+      c.onclick=()=>{it.obs=(it.obs.trim()?it.obs.trim()+' ':'')+f;ta.value=it.obs;agendar();ta.focus()};chips.append(c)}
+    chips.hidden=false;
+  }
+  ta.onfocus=mostrarFrases;
+  ta.onblur=()=>{setTimeout(()=>{if(document.activeElement!==ta)chips.hidden=true},150);if(it.obs.trim())guardarFrase(it.obs)};
+  ta.oninput=()=>{it.obs=ta.value;agendar()};
+  area.sincronizar=()=>{const f=precisaObs(it);ta.classList.toggle('falta',f);aviso.hidden=!f;if(document.activeElement!==ta&&ta.value!==it.obs)ta.value=it.obs};
+  area.append(el('label',{},'OBS:'),ta,aviso,chips);
+  return area;
+}
+
+/* ---------- Desenho dos itens ---------- */
 function desenharItens(){
+  atualizadores=[];
   const raiz=$('itens');raiz.replaceChildren();
+  if(MULTI){
+    $('modoItem').setAttribute('aria-selected',String(modo==='item'));$('modoTag').setAttribute('aria-selected',String(modo==='tag'));
+    $('seletorTag').hidden=modo!=='tag';
+    if(modo==='tag')desenharChipsTag();
+  }
   R.itens.forEach((texto,i)=>{
-    const it=itensAtivos()[i],box=el('div',{id:'item'+i,class:'item'});
-    box.append(el('div',{class:'item-cab'},el('span',{class:'num'},String(i+1).padStart(2,'0')),el('p',{class:'texto'},texto)));
-    const st=el('div',{class:'status',role:'radiogroup'});
-    for(const [s,d] of [['ES','sem anormalidade'],['EC','com anormalidade'],['NE','não executado']]){
-      const inp=el('input',{type:'radio',name:'st'+i,value:s,checked:it.status===s});
-      inp.onchange=()=>{it.status=s;agendar()};
-      st.append(el('label',{},inp,el('span',{},s,el('small',{},d))));
-    }
-    box.append(st);
-    const tipo=R.medicoes?.[i];
-    if(tipo)box.append(tabelaMedicao(tipo));
-    const ta=el('textarea',{value:it.obs,placeholder:'Observação (obrigatória para EC ou NE)'});
-    ta.setAttribute('aria-label','OBS do item '+(i+1));
-    ta.oninput=()=>{it.obs=ta.value;agendar()};
-    box.append(el('label',{},'OBS:'),ta,el('p',{class:'aviso-obs',hidden:true},'Informe a observação.'));
-    box.append(blocoFotos(it,tagAtiva||O.tag));
-    raiz.append(box);
+    if(MULTI&&modo==='item')raiz.append(cartaoMulti(i,texto));
+    else raiz.append(cartaoSimples(i,texto,MULTI?reg.tagItems[tagAtiva][i]:reg.items[i],MULTI?tagAtiva:O.tag));
   });
   atualizarProgresso();
+}
+function cabecalho(i,texto){return el('div',{class:'item-cab'},el('span',{class:'num'},n2(i)),el('p',{class:'texto'},texto))}
+function cartaoSimples(i,texto,it,tagDaFoto){
+  const box=el('div',{id:'item'+i,class:'item'});
+  box.append(cabecalho(i,texto));
+  const st=botoesStatus(it,'st'+i,false,antes=>{agendar();if(!antes&&it.status==='ES')setTimeout(()=>irProximoPendente(box),250)});
+  box.append(st);
+  const tipo=R.medicoes?.[i];
+  if(tipo)box.append(tabelaMedicao(tipo));
+  const obs=caixaObs(it,'OBS do item '+(i+1));box.append(obs);
+  box.append(blocoFotos(it,tagDaFoto));
+  atualizadores.push(()=>{
+    box.className='item'+(it.status==='ES'?' ok':it.status==='EC'?' alerta':it.status==='NE'?' ne':'');
+    box.dataset.pendente=pendente(it)?'1':'0';st.sincronizar();obs.sincronizar();
+  });
+  return box;
+}
+function cartaoMulti(i,texto){
+  const box=el('div',{id:'item'+i,class:'item multi'});
+  box.append(cabecalho(i,texto));
+  const linhaTodas=el('div',{class:'todas'});
+  const cont=el('span',{class:'sub'});
+  const bt=el('button',{type:'button',class:'btn peq'},'✓ Em branco → ES');
+  bt.onclick=()=>{const v=O.tagsEquipamentos.filter(t=>!reg.tagItems[t][i].status);if(!v.length)return;v.forEach(t=>reg.tagItems[t][i].status='ES');agendar();setTimeout(()=>irProximoPendente(box),250)};
+  linhaTodas.append(cont,bt);box.append(linhaTodas);
+  const lista=el('div',{class:'eq-lista'});
+  for(const tag of O.tagsEquipamentos){
+    const it=reg.tagItems[tag][i];
+    const linha=el('div',{class:'eq',id:'r'+i+'-'+tag});
+    const detalhe=el('div',{class:'eq-det',hidden:true});
+    let aberto=false;
+    const abrir=el('button',{type:'button',class:'eq-mais','aria-expanded':'false'});
+    const obs=caixaObs(it,'OBS '+tag+' item '+(i+1));
+    detalhe.append(obs,blocoFotos(it,tag));
+    const st=botoesStatus(it,'st'+i+'-'+tag,true,()=>{agendar();
+      if(it.status==='EC'||it.status==='NE'){aberto=true;sinc();detalhe.querySelector('textarea').focus()}
+      else if(O.tagsEquipamentos.every(t=>reg.tagItems[t][i].status))setTimeout(()=>irProximoPendente(box),250)});
+    abrir.onclick=()=>{aberto=!aberto;sinc()};
+    function sinc(){
+      detalhe.hidden=!(aberto||precisaObs(it));abrir.setAttribute('aria-expanded',String(!detalhe.hidden));
+      abrir.textContent=(it.obs.trim()?'✎':'＋')+(it.photos.length?' 📷'+it.photos.length:'');
+      abrir.title='OBS e fotos de '+tag;
+      linha.className='eq'+(it.status?' s-'+it.status:'');linha.dataset.pendente=pendente(it)?'1':'0';
+      st.sincronizar();obs.sincronizar();
+    }
+    linha.append(el('div',{class:'eq-topo'},el('span',{class:'eq-tag'},tag),st,abrir),detalhe);
+    lista.append(linha);
+    atualizadores.push(sinc);
+  }
+  box.append(lista);
+  atualizadores.push(()=>{
+    const its=O.tagsEquipamentos.map(t=>reg.tagItems[t][i]),f=its.filter(x=>x.status).length;
+    cont.textContent=f+'/'+its.length+' TAGs marcadas';bt.disabled=f===its.length;
+    box.className='item multi'+(f===its.length?(its.some(x=>x.status==='EC')?' alerta':' ok'):'');
+  });
+  return box;
+}
+
+/* ---------- Modo por TAG ---------- */
+function desenharChipsTag(){
+  const c=$('tagsChips');c.replaceChildren();
+  for(const tag of O.tagsEquipamentos){
+    const its=reg.tagItems[tag],f=its.filter(x=>x.status).length,pend=its.some(pendente);
+    const b=el('button',{type:'button',class:'chip tagchip'+(tag===tagAtiva?' ativo':'')+(!pend?' completa':'')},tag,el('span',{class:'n'},f+'/'+its.length));
+    b.onclick=()=>escolherTag(tag);c.append(b);
+  }
+  setTimeout(()=>c.querySelector('.ativo')?.scrollIntoView({inline:'center',block:'nearest'}),0);
+}
+async function escolherTag(tag){
+  if(!O.tagsEquipamentos?.includes(tag))return;
+  const ok=await gravarAgora();if(!ok){alert('Falha ao salvar. Exporte um backup antes de continuar.');return}
+  tagAtiva=tag;desenharItens();$('modoMulti').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function configurarMulti(){
+  $('modoMulti').hidden=false;tagAtiva=O.tagsEquipamentos[0];
+  try{modo=localStorage.getItem('p76-modo-multi')==='tag'?'tag':'item'}catch(e){}
+  for(const [id,m] of [['modoItem','item'],['modoTag','tag']])$(id).onclick=()=>{modo=m;try{localStorage.setItem('p76-modo-multi',m)}catch(e){}desenharItens()};
 }
 
 /* ---------- Fotos ---------- */
 function blocoFotos(it,tagDaFoto){
-  const area=el('div');
+  const area=el('div',{class:'fotos-area'});
   const cam=el('input',{type:'file',accept:'image/*',class:'oculto',tabIndex:-1});cam.setAttribute('capture','environment');
   const gal=el('input',{type:'file',accept:'image/*',multiple:true,class:'oculto',tabIndex:-1});
-  const aoEscolher=async e=>{await incluirFotos(it,e.target.files,tagDaFoto);e.target.value='';redesenharFotos()};
+  const aoEscolher=async e=>{await incluirFotos(it,e.target.files,tagDaFoto);e.target.value='';redesenhar()};
   cam.onchange=aoEscolher;gal.onchange=aoEscolher;
   const b1=el('button',{type:'button',class:'btn'},'📷 Tirar foto');b1.onclick=()=>cam.click();
   const b2=el('button',{type:'button',class:'btn'},'🖼️ Galeria');b2.onclick=()=>gal.click();
   const grade=el('div',{class:'fotos'});
-  function redesenharFotos(){
+  function redesenhar(){
     grade.replaceChildren();
     it.photos.forEach(p=>{
       const nome=N.nomeFoto(tagDaFoto,p);
       const enviar=el('button',{type:'button'},'Enviar');enviar.onclick=()=>enviarUma(p,tagDaFoto);
       const excluir=el('button',{type:'button'},'Excluir');
-      excluir.onclick=async()=>{if(!confirm('Excluir a foto '+nome+'?'))return;it.photos=it.photos.filter(x=>x!==p);const ok=await gravarAgora();if(ok)N.apagarOriginal(p.orig);redesenharFotos();atualizarProgresso()};
-      grade.append(el('div',{class:'foto'},el('img',{src:p.preview,alt:nome,loading:'lazy'}),el('div',{class:'nome'},nome),el('div',{class:'bts'},enviar,excluir)));
+      excluir.onclick=async()=>{if(!confirm('Excluir a foto '+nome+'?'))return;it.photos=it.photos.filter(x=>x!==p);const ok=await gravarAgora();if(ok)N.apagarOriginal(p.orig);redesenhar();atualizarProgresso()};
+      const img=el('img',{src:p.preview,alt:nome,loading:'lazy'});img.onclick=()=>verFoto(p.preview,nome);
+      grade.append(el('div',{class:'foto'},img,el('div',{class:'nome'},nome),el('div',{class:'bts'},enviar,excluir)));
     });
   }
-  redesenharFotos();
+  redesenhar();
   area.append(el('label',{},'Fotos / evidências'),el('div',{class:'fotos-bt'},b1,b2),cam,gal,grade);
   return area;
 }
+function verFoto(src,nome){const d=el('div',{class:'visor',role:'dialog','aria-label':nome},el('img',{src,alt:nome}),el('p',{},nome+' — toque para fechar'));d.onclick=()=>d.remove();document.body.append(d)}
 function lerArquivo(f){return new Promise((ok,falha)=>{const r=new FileReader;r.onload=()=>ok(r.result);r.onerror=()=>falha(r.error);r.readAsDataURL(f)})}
 async function reduzir(url){const img=new Image;await new Promise((ok,falha)=>{img.onload=ok;img.onerror=falha;img.src=url});const f=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*f));c.height=Math.max(1,Math.round(img.height*f));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.76)}
 async function incluirFotos(it,arquivos,tagDaFoto){
@@ -196,12 +333,7 @@ async function incluirFotos(it,arquivos,tagDaFoto){
   const ok=await gravarAgora();atualizarProgresso();
   if(!ok)alert('A foto aparece na tela, mas NÃO foi gravada no PDA. Envie ao OneDrive antes de sair.');
 }
-function todasFotos(){
-  const l=[];
-  if(O.tagsEquipamentos){for(const tag of O.tagsEquipamentos)for(const it of reg.tagItems[tag])for(const p of it.photos)l.push({tag,p})}
-  else for(const it of reg.items)for(const p of it.photos)l.push({tag:O.tag,p});
-  return l;
-}
+function todasFotos(){const l=[];for(const {tag,it} of todosItens())for(const p of it.photos)l.push({tag,p});return l}
 async function enviarUma(p,tag){
   const nome=N.nomeFoto(tag,p);
   try{const b=await N.blobDaFoto(p),f=new File([b],nome,{type:b.type});
@@ -223,6 +355,7 @@ $('zipFotos').onclick=async()=>{
   const arqs=[];for(const {tag,p} of lista)arqs.push({name:N.nomeFoto(tag,p),bytes:new Uint8Array(await (await N.blobDaFoto(p)).arrayBuffer())});
   const z=N.zip(arqs);N.baixar(z,O.om+'_'+O.tag+'_fotos.zip');msg('ZIP de '+(z.size/1048576).toFixed(1)+' MB solicitado. Confira no OneDrive.');
 };
+$('relatorio').onclick=()=>sairPara('relatorio.html?tag='+encodeURIComponent(O.tag));
 
 /* ---------- Medições (potência / isolação) ---------- */
 function num(x){const v=String(x||'').trim().replace(',','.');return v&&Number.isFinite(Number(v))?Number(v):null}
@@ -243,17 +376,22 @@ function tabelaMedicao(tipo){
     tr.append(el('td',{},inp));
     let un;if(!pot){un=el('select');for(const u of ['kΩ','MΩ','GΩ'])un.append(el('option',{value:u},u));un.value=d.unit;tr.append(el('td',{},un))}
     const st=el('select');for(const s of ['','ES','EC','NE'])st.append(el('option',{value:s},s||'—'));st.value=d.status;tr.append(el('td',{},st));
-    const calc=()=>{d.status=pot?statusPotencia(d.measured,hx.projeto):statusIsolacao(d.measured,d.unit);st.value=d.status;agendar()};
-    inp.oninput=()=>{d.measured=inp.value;calc()};if(un)un.onchange=()=>{d.unit=un.value;calc()};st.onchange=()=>{d.status=st.value;agendar()};
+    const pinta=()=>{tr.className=d.status==='EC'?'linha-ec':''};pinta();
+    const calc=()=>{d.status=pot?statusPotencia(d.measured,hx.projeto):statusIsolacao(d.measured,d.unit);st.value=d.status;pinta();agendar()};
+    inp.oninput=()=>{d.measured=inp.value;calc()};if(un)un.onchange=()=>{d.unit=un.value;calc()};st.onchange=()=>{d.status=st.value;pinta();agendar()};
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();const prox=tr.nextElementSibling?.querySelector('input');if(prox)prox.focus();else inp.blur()}};
     corpo.append(tr);
   });
   t.append(el('thead',{},cab),corpo);box.append(el('div',{class:'tabela'},t));
   const chave=pot?'instrumentPower':'instrumentIso',instr=el('input',{value:reg[chave],placeholder:'Modelo e nº de série'});
   instr.oninput=()=>{reg[chave]=instr.value;agendar()};
+  const ant=pot?h.instrPotencia:h.instrIsolacao;
+  const usar=el('button',{type:'button',class:'btn peq'},'Usar o mesmo da inspeção anterior');usar.onclick=()=>{reg[chave]=ant;instr.value=ant;agendar()};
   box.append(el('label',{},'Instrumento utilizado (modelo e nº de série)'),instr);
+  if(ant)box.append(el('div',{class:'acoes'},usar));
   const notas=pot?h.notasPotencia:h.notasIsolacao;
   box.append(el('details',{},el('summary',{},'Inspeção anterior: instrumento, notas e status'),
-    el('pre',{},(pot?h.instrPotencia:h.instrIsolacao)+(notas?'\n'+notas:'')+'\nStatus anterior: '+hist.map(x=>x.status).join(', '))));
+    el('pre',{},ant+(notas?'\n'+notas:'')+'\nStatus anterior: '+hist.map(x=>x.status).join(', '))));
   return box;
 }
 function linhasMedicao(tipo){
@@ -264,23 +402,7 @@ function linhasMedicao(tipo){
   return out;
 }
 
-/* ---------- OM de telefones Ex: preenchimento por TAG ---------- */
-async function escolherTag(tag){
-  if(!O.tagsEquipamentos?.includes(tag)||tag===tagAtiva)return;
-  const ok=await gravarAgora();if(!ok){$('equipamentoAtivo').value=tagAtiva;alert('Falha ao salvar a TAG anterior. Não avance antes de exportar backup.');return}
-  tagAtiva=tag;$('equipamentoAtivo').value=tag;desenharItens();
-}
-function configurarTags(){
-  const seletor=$('equipamentoAtivo'),sec=$('secaoEquipamentos');
-  if(!O.tagsEquipamentos){sec.hidden=true;return}
-  sec.hidden=false;seletor.replaceChildren();
-  O.tagsEquipamentos.forEach(tag=>seletor.append(el('option',{value:tag},tag)));
-  tagAtiva=O.tagsEquipamentos[0];seletor.value=tagAtiva;
-  seletor.onchange=()=>escolherTag(seletor.value);
-  for(const [id,delta] of [['equipAnterior',-1],['equipProximo',1]]){
-    $(id).onclick=()=>{const i=O.tagsEquipamentos.index(tagAtiva),n=i+delta;if(n>=0&&n<O.tagsEquipamentos.length)escolherTag(O.tagsEquipamentos[n])}
-  }
-}
+/* ---------- TXT no formato do roteiro SAP ---------- */
 function exportarTabelaTag(tarefas){
   const cols=tarefas.map(i=>String(i).padStart(2,'0'));
   const linhas=['TAG/TAREFA /  '+cols.join('  /  ')+'  /','------------------------------------------------------------'];
@@ -323,13 +445,11 @@ function exportarTelefone(){
   N.baixar(new Blob([L.join('\r\n')],{type:'text/plain;charset=utf-8'}),O.om+'_'+O.tag+'_preenchida.txt');
   msg('TXT de '+O.tagsEquipamentos.length+' TAGs gerado. Confira no OneDrive.');
 }
-
-/* ---------- TXT no formato do roteiro SAP ---------- */
 $('txt').onclick=()=>{
-  if(O.tagsEquipamentos){exportarTelefone();return}
+  if(MULTI){exportarTelefone();return}
   const e=verificar();if(e.length&&!confirm('Pendências:\n• '+e.slice(0,12).join('\n• ')+(e.length>12?'\n…':'')+'\n\nExportar mesmo assim?'))return;
   const L=[];
-  // Para A3281, o texto destinado ao SAP começa diretamente no código do roteiro:
+  // Para A3281, A3308 e A3307 o texto destinado ao SAP começa diretamente no código do roteiro:
   // cabeçalho de OM, data e hora são anotações do OneNote, não do roteiro exportado.
   if(!['A3281-1A','A3308-1A','A3307-2A'].includes(O.roteiro)){
     const data=reg.date?new Date(reg.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'DATA NÃO INFORMADA';
@@ -362,7 +482,7 @@ $('restaurar').onchange=async e=>{
   try{
     const regs=N.lerBackup(JSON.parse(await f.text())),r=regs[O.tag];
     if(!r)throw Error('este arquivo não contém a '+O.tag+'.');
-    if(!confirm('Substituir os dados atuais da '+O.tag+' pelos do backup?'))return;
+    if(!confirm('Substituir os dados atuais da '+(O.tituloCard||O.tag)+' pelos do backup?'))return;
     reg=r;preencher();const ok=await gravarAgora();
     alert(ok?'Backup restaurado e gravado no PDA.':'Backup carregado, mas NÃO gravado no PDA. Não feche a página.');
   }catch(err){alert('Não foi possível restaurar: '+err.message)}
@@ -370,27 +490,39 @@ $('restaurar').onchange=async e=>{
 
 /* ---------- Início ---------- */
 function preencher(){for(const k of CAMPOS)$(k).value=reg[k]||'';desenharItens()}
-CAMPOS.forEach(k=>$(k).addEventListener('input',()=>{reg[k]=$(k).value;agendar()}));
+CAMPOS.forEach(k=>$(k).addEventListener('input',()=>{reg[k]=$(k).value;if(['name','company','hours'].includes(k))guardarPerfil();agendar()}));
+function irParaAncora(){
+  const q=new URLSearchParams(location.search),eq=q.get('eq'),m=location.hash.match(/^#item(\d+)$/);if(!m)return;
+  const i=+m[1];let alvo=document.getElementById('item'+i);
+  if(MULTI&&eq){
+    if(modo==='tag'){tagAtiva=eq;desenharItens();alvo=document.getElementById('item'+i)}
+    else{const r=document.getElementById('r'+i+'-'+eq);if(r){alvo=r;r.querySelector('.eq-mais')?.click()}}
+  }
+  if(alvo)setTimeout(()=>{alvo.scrollIntoView({block:'start'});alvo.classList.add('piscar');setTimeout(()=>alvo.classList.remove('piscar'),1500)},100);
+}
 async function iniciar(){
   N.registrarSW();
   try{
     const q=new URLSearchParams(location.search),tag=q.get('tag');
     O=N.om(tag);if(!O)throw Error(tag?'TAG “'+tag+'” não está no catálogo.':'Nenhuma TAG informada.');
-    R=N.roteiro(O);
-    document.title=O.tag+' | Preventiva P-76';
-    $('tagTopo').textContent=O.tituloCard||O.tag;
-    $('titulo').textContent=(O.tituloCard||O.tag)+' — OM '+O.om;
-    $('meta').textContent=P76.sistemas[O.sistema]+' · Operação '+R.operacao+' · '+R.codigo;
-    $('tituloItens').textContent='Roteiro SAP — '+R.itens.length+' itens'+(O.tagsEquipamentos?' por TAG':'');
+    R=N.roteiro(O);MULTI=!!O.tagsEquipamentos;
+    const nome=O.tituloCard||O.tag;
+    document.title=nome+' | Preventiva P-76';
+    $('tagTopo').textContent=nome;
+    $('titulo').textContent=nome+' — OM '+O.om;
+    $('meta').textContent=P76.sistemas[O.sistema]+' · Operação '+R.operacao+' · '+R.codigo+(MULTI?' · '+O.tagsEquipamentos.length+' equipamentos':'');
+    $('tituloItens').textContent='Roteiro SAP — '+R.itens.length+' itens'+(MULTI?' × '+O.tagsEquipamentos.length+' TAGs':'');
     R.obs.forEach((o,i)=>$('obsRoteiro').append(el('details',{},el('summary',{},'OBS.'+(i+1)+' do roteiro'),el('p',{class:'sub'},o))));
     $('refs').textContent=R.refs;$('materiais').textContent=R.materiais;
     $('revisao').textContent='Revisão: '+R.revisao+' · Responsável: '+R.responsavel+' · Equipe: '+R.equipe.join('; ');
     const {registro,origem}=await N.carregar(O.tag);reg=registro;
-    $('app').hidden=false;configurarTags();preencher();
+    if(origem==='novo'){const p=lerPerfil();if(p.name||p.company||p.hours){reg.name=p.name||'';reg.company=p.company||'';reg.hours=p.hours||'';$('notaPerfil').hidden=false}}
+    if(MULTI)configurarMulti();
+    $('app').hidden=false;preencher();irParaAncora();
     msg(origem==='migrado'?'Registro trazido da versão anterior do app e gravado no novo formato.':origem==='pda'?'Registro recuperado do PDA.':'Nova inspeção. Os dados são gravados automaticamente.',origem==='migrado'?'ok':'');
     N.pedirPersistencia();
   }catch(e){
-    $('erroGeral').innerHTML='';$('erroGeral').append('Não foi possível abrir a preventiva: '+e.message+' ',el('a',{href:'./'},'Voltar ao início'));
+    $('erroGeral').replaceChildren('Não foi possível abrir a preventiva: '+e.message+' ',el('a',{href:'./'},'Voltar ao início'));
     $('tagTopo').textContent='Erro';
   }
 }

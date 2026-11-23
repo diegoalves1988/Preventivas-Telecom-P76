@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123b56"><title>Relatório de inspeção | P-76</title>
+<link rel="stylesheet" href="estilo.css?v=20261123">
+<style>
+body{background:#e9eef3}
+.ferramentas{position:sticky;top:0;z-index:5;background:var(--azul);padding:10px 12px;display:flex;gap:8px;align-items:center}
+.ferramentas a{color:#fff;text-decoration:none;font-weight:700;font-size:1.2rem;padding:4px 8px}
+.ferramentas .btn{flex:1;max-width:340px;margin-left:auto}
+.folha{background:#fff;max-width:820px;margin:14px auto;padding:22px 24px;box-shadow:0 2px 10px #0002;font-size:.86rem;color:#111}
+.folha h1{font-size:1.2rem;margin:0 0 2px;color:var(--azul)}
+.folha h2{font-size:.95rem;margin:18px 0 6px;color:var(--azul);border-bottom:2px solid var(--azul);padding-bottom:3px}
+.cab{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #ccd;padding-bottom:8px}
+.cab .sub{font-size:.8rem}
+.dados{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 14px;margin-top:10px}
+.dados div{border-bottom:1px dotted #bbc;padding:3px 0}
+.dados small{display:block;color:#667;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em}
+.contagem{display:flex;gap:8px;margin:12px 0 2px;flex-wrap:wrap}
+.contagem span{border:1px solid #ccd;border-radius:6px;padding:4px 10px;font-weight:700}
+.folha table{min-width:0;font-size:.78rem}
+.folha th,.folha td{border:1px solid #ccd;padding:4px 5px;vertical-align:top}
+.folha th{background:#eef3f7}
+.st{font-weight:800;text-align:center;white-space:nowrap}
+.st.EC{background:#ffefd1}.st.NE{background:#e6e9ec}.st.ES{background:#e7f5ec}
+.texto-item{color:#334}
+.folha td:first-child{white-space:nowrap}
+.fotos-rel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fotos-rel figure{margin:0;break-inside:avoid}
+.fotos-rel img{width:100%;height:150px;object-fit:cover;border:1px solid #ccd}
+.fotos-rel figcaption{font-size:.7rem;color:#445}
+.assin{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:40px}
+.assin div{border-top:1px solid #333;padding-top:4px;text-align:center;font-size:.78rem}
+.rod{margin-top:16px;font-size:.7rem;color:#667;text-align:center}
+@media print{
+  body{background:#fff}.ferramentas{display:none}
+  .folha{box-shadow:none;margin:0;max-width:none;padding:0}
+  tr,figure{break-inside:avoid}
+  @page{size:A4;margin:14mm 12mm}
+}
+</style></head>
+<body>
+<div class="ferramentas"><a id="voltar" href="./" aria-label="Voltar">←</a><button class="btn prim" type="button" onclick="print()">🖨️ Imprimir / salvar em PDF</button></div>
+<div class="folha" id="folha"><p>Carregando…</p></div>
+<script src="dados.js?v=20261123"></script>
+<script src="nucleo.js?v=20261123"></script>
+<script>
+'use strict';
+const N=window.Nucleo;
+function el(tag,props={},...f){const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}e.append(...f.filter(x=>x!=null));return e}
+const dataBR=d=>d?d.split('-').reverse().join('/'):'—';
+(async()=>{
+  const folha=document.getElementById('folha');
+  try{
+    const tag=new URLSearchParams(location.search).get('tag'),O=N.om(tag);if(!O)throw Error('TAG não encontrada.');
+    document.getElementById('voltar').href='preventiva.html?tag='+encodeURIComponent(tag);
+    const R=N.roteiro(O),{registro:r,origem}=await N.carregar(tag),nome=O.tituloCard||O.tag;
+    document.title='Relatório '+nome+' — OM '+O.om;
+    const blocos=O.tagsEquipamentos?O.tagsEquipamentos.map(t=>[t,r.tagItems[t]]):[[O.tag,r.items]];
+    const todos=blocos.flatMap(([,its])=>its),cont=s=>todos.filter(x=>x.status===s).length;
+    folha.replaceChildren();
+    folha.append(el('div',{class:'cab'},
+      el('div',{},el('h1',{},'Relatório de inspeção preventiva'),el('div',{},el('b',{},nome),' — OM '+O.om),el('div',{class:'sub'},R.codigo)),
+      el('div',{class:'sub',style:'text-align:right'},'P-76 · Telecom',el('br'),P76.sistemas[O.sistema])));
+    const dados=el('div',{class:'dados'});
+    for(const [k,v] of [['Executante',r.name],['Empresa',r.company],['HH por executante',r.hours],['Data da inspeção',dataBR(r.date)],['Localização',r.location],['Situação da operação',r.outcome||'Não informada'],['Causa do desvio',r.deviation]])dados.append(el('div',{},el('small',{},k),v||'—'));
+    folha.append(dados);
+    folha.append(el('div',{class:'contagem'},el('span',{},'ES: '+cont('ES')),el('span',{},'EC: '+cont('EC')),el('span',{},'NE: '+cont('NE')),el('span',{},'Em branco: '+todos.filter(x=>!x.status).length)));
+    if(origem==='novo')folha.append(el('p',{class:'aviso'},'Esta OM ainda não foi preenchida neste aparelho.'));
+
+    // Itens
+    folha.append(el('h2',{},'Roteiro SAP — '+R.itens.length+' itens'));
+    if(!O.tagsEquipamentos){
+      const t=el('table'),tb=el('tbody');t.append(el('thead',{},el('tr',{},el('th',{},'Nº'),el('th',{},'Item do roteiro'),el('th',{},'Status'),el('th',{},'Observação'))),tb);
+      r.items.forEach((it,i)=>tb.append(el('tr',{},el('td',{},String(i+1).padStart(2,'0')),el('td',{class:'texto-item'},R.itens[i]),el('td',{class:'st '+it.status},it.status||'—'),el('td',{},it.obs))));
+      folha.append(t);
+    }else{
+      const t=el('table'),cab=el('tr',{},el('th',{},'TAG'));R.itens.forEach((_,i)=>cab.append(el('th',{},String(i+1).padStart(2,'0'))));
+      const tb=el('tbody');for(const [eq,its] of blocos){const tr=el('tr',{},el('td',{},el('b',{},eq)));its.forEach(it=>tr.append(el('td',{class:'st '+it.status},it.status||'—')));tb.append(tr)}
+      t.append(el('thead',{},cab),tb);folha.append(el('div',{class:'tabela'},t));
+      const leg=el('table'),lb=el('tbody');R.itens.forEach((x,i)=>lb.append(el('tr',{},el('td',{},String(i+1).padStart(2,'0')),el('td',{class:'texto-item'},x))));leg.append(lb);
+      folha.append(el('details',{open:true},el('summary',{},'Itens do roteiro'),leg));
+      const obs=[];for(const [eq,its] of blocos)its.forEach((it,i)=>{if(it.obs)obs.push([eq,i,it])});
+      if(obs.length){folha.append(el('h2',{},'Observações por equipamento'));const t2=el('table'),b2=el('tbody');t2.append(el('thead',{},el('tr',{},el('th',{},'TAG'),el('th',{},'Item'),el('th',{},'Status'),el('th',{},'Observação'))),b2);
+        obs.forEach(([eq,i,it])=>b2.append(el('tr',{},el('td',{},eq),el('td',{},String(i+1).padStart(2,'0')),el('td',{class:'st '+it.status},it.status||'—'),el('td',{},it.obs))));folha.append(t2)}
+    }
+    // Medições
+    if(O.historico&&R.medicoes){
+      for(const [k,tit,hist] of [['power','Medições de potência (W)',O.historico.potencia],['isolation','Medições de isolação',O.historico.isolacao]]){
+        folha.append(el('h2',{},tit));const t=el('table'),b=el('tbody');const pot=k==='power';
+        t.append(el('thead',{},el('tr',{},el('th',{},'Cabo'),pot?el('th',{},'Projeto'):null,el('th',{},'Anterior'),el('th',{},'Atual'),el('th',{},'Status'))),b);
+        r[k].forEach((m,i)=>b.append(el('tr',{},el('td',{},hist[i].cabo),pot?el('td',{},hist[i].projeto):null,el('td',{},hist[i].anterior),el('td',{},m.measured?(pot?m.measured:m.measured+' '+m.unit):'—'),el('td',{class:'st '+m.status},m.status||'—'))));
+        folha.append(t,el('p',{class:'sub'},'Instrumento: '+(r[pot?'instrumentPower':'instrumentIso']||'—')));
+      }
+    }
+    // Fotos
+    const fotos=[];for(const [eq,its] of blocos)its.forEach((it,i)=>it.photos.forEach(p=>fotos.push({eq,i,p})));
+    folha.append(el('h2',{},'Registro fotográfico ('+fotos.length+')'));
+    if(fotos.length){const g=el('div',{class:'fotos-rel'});for(const {eq,i,p} of fotos)g.append(el('figure',{},el('img',{src:p.preview,alt:''}),el('figcaption',{},N.nomeFoto(eq,p)+' · item '+String(i+1).padStart(2,'0')+(O.tagsEquipamentos?' · '+eq:''))));folha.append(g)}
+    else folha.append(el('p',{class:'sub'},'Nenhuma foto registrada.'));
+    folha.append(el('div',{class:'assin'},el('div',{},'Executante',el('br'),r.name||''),el('div',{},'Fiscalização / Supervisão')));
+    folha.append(el('p',{class:'rod'},'Gerado em '+new Date().toLocaleString('pt-BR')+' pelo app Preventivas Telecom P-76 · Revisão do roteiro: '+R.revisao));
+  }catch(e){folha.replaceChildren(el('p',{class:'msg erro'},'Não foi possível gerar o relatório: '+e.message))}
+})();
+</script>
+</body></html>

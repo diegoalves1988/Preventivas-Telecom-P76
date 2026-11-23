@@ -189,9 +189,20 @@ function lerBackup(json){
   return saida;
 }
 
+/* ---------- Anomalias (EC / NE) para painel, relatório e CSV ---------- */
+function anomalias(o,r){
+  const R=roteiro(o),l=[];
+  const blocos=o.tagsEquipamentos?o.tagsEquipamentos.map(t=>[t,r.tagItems[t]]):[[o.tag,r.items]];
+  for(const [eq,itens] of blocos)itens.forEach((it,i)=>{if(it.status==='EC'||it.status==='NE')l.push({om:o.om,tag:o.tag,nome:o.tituloCard||o.tag,equipamento:eq,item:i+1,texto:R.itens[i],status:it.status,obs:it.obs})});
+  const h=o.historico;
+  if(h){for(const [k,nome,hist] of [['power','POTÊNCIA',h.potencia],['isolation','ISOLAÇÃO',h.isolacao]])(r[k]||[]).forEach((m,i)=>{if(m.status==='EC'||m.status==='NE')l.push({om:o.om,tag:o.tag,nome:o.tituloCard||o.tag,equipamento:hist[i].cabo,item:nome,texto:'Medição de '+nome.toLowerCase(),status:m.status,obs:'Medido: '+(m.measured||'—')+(k==='isolation'&&m.measured?' '+m.unit:'')+(k==='power'?' W (projeto '+hist[i].projeto+' W)':'')})})}
+  return l;
+}
+function csv(linhas){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';return new Blob(['\ufeff'+linhas.map(l=>l.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'})}
+
 function registrarSW(){if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 async function pedirPersistencia(){try{await navigator.storage?.persist?.()}catch(e){}}
 
-window.Nucleo={om,roteiro,novoRegistro,normalizar,carregar,salvar,guardarOriginal,apagarOriginal,blobDaFoto,progresso,iniciada,ROTULO,
+window.Nucleo={anomalias,csv,om,roteiro,novoRegistro,normalizar,carregar,salvar,guardarOriginal,apagarOriginal,blobDaFoto,progresso,iniciada,ROTULO,
   hoje,baixar,nomeFoto,zip,montarBackup,lerBackup,registrarSW,pedirPersistencia};
 })();

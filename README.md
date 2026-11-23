@@ -7,6 +7,7 @@ App para preencher as preventivas de telecom no PDA, gravando tudo no navegador 
 | Arquivo | O que é |
 |---|---|
 | `index.html` | Tela inicial: busca, filtros por sistema e situação, progresso de cada OM, backup geral |
+| `relatorio.html` | Relatório de inspeção com fotos, pronto para imprimir ou salvar em PDF (`relatorio.html?tag=...`) |
 | `preventiva.html` | Tela única de preenchimento, usada por todas as OMs (`preventiva.html?tag=CDI-5510505A`) |
 | `dados.js` | Catálogo: roteiros SAP (textos literais dos itens) e lista de OMs |
 | `nucleo.js` | Gravação no PDA, migração dos dados antigos, backup e restauração |
@@ -41,3 +42,16 @@ Foram incluídas as caixas Ex de telefonia **CDT-1415001** (2032246611), **CDT-1
 A OM de **telefones Ex vinculada à CDT-1421001** (2032658978) utiliza o roteiro **A3307-2A** de 14 itens e contém **10 TAGs individuais**. Use o seletor de equipamentos na tela de inspeção para registrar status, observações e fotos separadamente. **Todos os status são criados em branco**, sem importar os ES escritos no texto de referência. O TXT reúne as duas matrizes de TAG/tarefa do SAP e um registro complementar do item 10, que não consta nas colunas da matriz de origem.
 
 Os códigos das novas OMs começam diretamente no código do roteiro na exportação TXT, sem as linhas iniciais do OneNote. Os backups leves removem as fotos também da OM com múltiplas TAGs.
+## Melhorias de agilidade — 23/11/2026
+
+- **Painel na tela inicial:** % de verificações feitas, total de EC e NE, lista de anomalias com atalho direto para o item e exportação para planilha (CSV/Excel).
+- **Executante lembrado:** nome, empresa e HH da última inspeção já vêm preenchidos nas OMs novas.
+- **Próximo pendente:** botão flutuante (e toque no título da barra) leva ao próximo item sem status ou sem OBS. Ao marcar ES a tela avança sozinha.
+- **Marcar em branco como ES:** marca de uma vez só os itens ainda vazios, com confirmação.
+- **Frases rápidas de OBS:** sugestões padrão e as últimas observações usadas no aparelho.
+- **Telefones (várias TAGs):** novo modo **Por item**, com todas as TAGs de cada item numa lista (ES/EC/NE em um toque, OBS e fotos abrem por TAG). O modo **Por TAG** continua disponível, com fichas mostrando o progresso de cada equipamento.
+- **Relatório com fotos (PDF)** por OM, com campos de assinatura.
+- **Medições:** botão para reaproveitar o instrumento da inspeção anterior; Enter passa para o próximo cabo; linhas EC destacadas.
+- O TXT exportado para o SAP **não mudou** (conferido byte a byte nas 12 OMs).
+
+Ao alterar arquivos, troque o `?v=20261123` nos HTML e o nome do cache em `sw.js` para os PDAs pegarem a versão nova.
